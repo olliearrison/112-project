@@ -1,10 +1,8 @@
-from cmu_112_graphics import *
-
 def drawWindows(app, canvas):
     drawTopWindow(app, canvas)
     drawSideBar(app, canvas)
-    drawButton(app, canvas, app.width - 150, app.height - 40, app.height//15)
-    drawButton(app, canvas, app.width, app.height, app.height//15)
+    #drawButton(app, canvas, app.width - 150, app.height - 40, app.height//15)
+    #drawButton(app, canvas, app.width, app.height, app.height//15)
 
 def drawTopWindow(app, canvas):
     canvas.create_rectangle(0,0,app.width,app.height//15,
@@ -16,22 +14,32 @@ def drawSideBar(app, canvas):
     app.height-sideBarMargin,
     fill = '#181818', outline = '#181818')
 
-def drawButton(app, canvas, x, y, size):
-    canvas.create_rectangle(x,y,x+size,y+size,
-        fill = '#161212', outline = '#161212')
 
-"""
 class Button(object):
     # x and y refer to the top left corner
     # response passes in the function that is
     # if the future, make the option for rectangular buttons
-    def __init__(self, size, x, y, response):
+    def __init__(self, app, size, x, y, response):
         #self.image = image
         #self.activeImage = image
+        self.app = app
         self.size = size
         self.x = x
         self.y = y
         self.response = response
+
+    def checkClicked(self,x,y):
+        print("hi")
+        if True:
+            print("wow this kinda works: ", x, y)
+        x1 = self.x
+        x2 = self.x + self.size
+        y1 = self.y
+        y2 = self.y + self.size
+
+        if (x >= x1 and x <= x2) and (y >= y1 and y <= y2):
+            print("Button do thingos")
+            self.response(self.app)
 
     def clickButton():
         return 42
@@ -39,4 +47,4 @@ class Button(object):
     def drawButton(self, app, canvas):
         canvas.create_rectangle(self.x,self.y,self.x+self.size,self.y+self.size,
         fill = '#161212', outline = '#161212')
-"""
+
