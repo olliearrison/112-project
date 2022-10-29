@@ -25,30 +25,34 @@ to do later:
 def appStarted(app):
     app.margin = 5
     app.imageWidth, app.imageHeight = 400, 450
-    clearBgColor = (255, 255, 255, 225)
+    #clearBgColor = (255, 255, 255, 0)
     bgColor = (255, 255, 255)
     app.currentBrush = (255, 255, 255, 110)
     app.scaleFactor = 1
     app.rotation = 0
 
-    app.layer1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), bgColor)
-    for x in range(app.layer1.width):
-        for y in range(app.layer1.height):
-            app.layer1.putpixel((x,y),bgColor)
-
-    app.image1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), bgColor)
-    for x in range(app.image1.width):
-        for y in range(app.image1.height):
-            app.image1.putpixel((x,y),clearBgColor)
+    app.image1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+    bgColor)
+    app.image1 = app.scaleImage(app.image1, app.scaleFactor)
 
     app.oldX = None
     app.oldY = None
-    app.image1 = app.scaleImage(app.image1, app.scaleFactor)
 
-    app.opacityUp = Button(app, 30, 120, 90, brushOpacityUp)
-    #app.opacityDown = Button(30, 100, 100, response)
-    app.mainButtons = []
-    app.mainButtons.append(app.opacityUp)
+    app.mainButtons = createButtons(app)
+
+def createButtons(app):
+    result = []
+    opacityUp = Button(app, 30, 120, 90, brushOpacityUp)
+    result.append(opacityUp)
+    return result
+
+def drawButtons(app, canvas):
+    for button in app.mainButtons:
+        button.drawButton(app, canvas)
+
+def checkButtons(app, x, y):
+    for button in app.mainButtons:
+        button.checkClicked(x,y)
 
     """
     rotate and zoom
@@ -64,9 +68,7 @@ def appStarted(app):
 
 
 def response():
-    print("*********")
-    print("*********")
-    print("hi")
+    print("response has been called")
     
 def mousePressed(app, event):
     (x, y) = event.x, event.y
@@ -86,6 +88,9 @@ def keyPressed(app, event):
 def brushOpacityUp(app):
     adjustBrushOpacity(app, 10)
 
+def brushOpacityDown(app):
+    adjustBrushOpacity(app, -10)
+
 def adjustBrushOpacity(app, amount):
     checkValue = app.currentBrush[3] + amount
     if checkValue >= 0 and checkValue <= 255:
@@ -95,26 +100,6 @@ def adjustBrushOpacity(app, amount):
 def mouseReleased(app, event):
     app.oldX = None
     app.oldY = None
-
-def mouseDragged(app, event):
-    (x, y) = event.x, event.y
-    imageX, imageY = insideImage(app,x,y)
-
-    if (app.oldX == None) or (app.oldY == None):
-        drawPixels(app,imageX,imageY)
-    else:
-        imageOldX, imageOldY = insideImage(app,app.oldX,app.oldY)
-        drawLine(app, imageOldX, imageOldY, imageX, imageY)
-    app.oldX = x
-    app.oldY = y
-
-def checkButtons(app, x, y):
-    listThingo = []
-    print(type(app.mainButtons[0]))
-    listThingo.extend(app.mainButtons)
-    for buttonThing in listThingo:
-        buttonThing.checkClicked(x,y)
-    print("checkButtons")
 
 def insideImage(app,x,y):
     marginX = (app.width - app.imageWidth)//2
@@ -142,8 +127,6 @@ def drawPixel(app, x, y):
     xWorks = (x < app.imageWidth) and (x > 0)
     yWorks = (y < app.imageHeight) and (y > 0)
     if xWorks and yWorks:
-        #r,g,b,a = app.image1.getpixel((x,y))
-        #color = newPixelColor(app, (r,g,b,a), app.currentBrush)
         app.image1.putpixel((x,y),app.currentBrush)
 
 def newPixelColor(app, init, new):
@@ -153,6 +136,18 @@ def newPixelColor(app, init, new):
     a = app.currentBrush[3]
     return (r,g,b,a)
 
+def mouseDragged(app, event):
+    (x, y) = event.x, event.y
+    imageX, imageY = insideImage(app,x,y)
+
+    if (app.oldX == None) or (app.oldY == None):
+        drawPixels(app,imageX,imageY)
+    else:
+        imageOldX, imageOldY = insideImage(app,app.oldX,app.oldY)
+        drawLine(app, imageOldX, imageOldY, imageX, imageY)
+    app.oldX = x
+    app.oldY = y
+
 def redrawAll(app, canvas):
     drawBackground(app, canvas)
 
@@ -161,6 +156,6 @@ def redrawAll(app, canvas):
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image1))
     
     drawWindows(app, canvas)
-    app.opacityUp.drawButton(app, canvas)
+    drawButtons(app, canvas)
 
 runApp(width=800, height=550)
