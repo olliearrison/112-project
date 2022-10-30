@@ -12,6 +12,7 @@ to do:
 
 MULTIPLE LAYERS BEFORE OPACITY ADDITION WORKS
 
+- prescale images to save loading time
 - add zoom
 - break code more effectivly into groups
 - creating a button class
@@ -40,10 +41,84 @@ def appStarted(app):
 
     app.mainButtons = createButtons(app)
 
+def getImage(name, app):
+    imageTitle = "buttons/" + name + ".png"
+    imageTitleActive = "buttons/" + name + "-active" + ".png"
+
+    image = app.loadImage(imageTitle)
+    image = app.scaleImage(image, 1/250)
+
+    imageActive = app.loadImage(imageTitleActive)
+    imageActive = app.scaleImage(imageActive, 1/250)
+    return (image, imageActive)
+
 def createButtons(app):
     result = []
-    opacityUp = Button(app, 30, 120, 90, brushOpacityUp)
-    result.append(opacityUp)
+
+    # first row (24)
+    rows = 20
+    rowWidth = app.width//rows
+
+    # (size, x, y, response, isActive, image1, image2)
+
+
+    #gallery = Button(app, 40, 1*rowWidth, 10, brushOpacityUp, "gallery", False)
+    #gallery.getImage(app)
+    #result.append(gallery)
+
+    toolImage = getImage("tool", app)
+    tool = Button(app, 10, 2*rowWidth, 15, brushOpacityUp, False, 
+    toolImage)
+
+    wandImage = getImage("adjust", app)
+    wand = Button(app, 10, 3*rowWidth, 15, brushOpacityUp, False, 
+    wandImage)
+
+    selectImage = getImage("select", app)
+    select = Button(app, 10, 4*rowWidth, 15, brushOpacityUp, False, 
+    selectImage)
+
+    adjustImage = getImage("adjust", app)
+    adjust = Button(app, 10, 5*rowWidth, 15, brushOpacityUp, False, 
+    adjustImage)
+
+    penImage = getImage("pen", app)
+    pen = Button(app, 10, 15*rowWidth, 15, brushOpacityUp, False, 
+    penImage)
+
+    blendImage = getImage("blend", app)
+    blend = Button(app, 10, 16*rowWidth, 15, brushOpacityUp, False, 
+    blendImage)
+
+    eraserImage = getImage("eraser", app)
+    eraser = Button(app, 10, 17*rowWidth, 15, brushOpacityUp, False, 
+    eraserImage)
+
+    layersImage = getImage("layers", app)
+    layers = Button(app, 10, 18*rowWidth, 15, brushOpacityUp, False, 
+    layersImage)
+
+    selectorImage = getImage("selector", app)
+    selector = Button(app, 10, 15, app.height//2, brushOpacityUp, False, 
+    selectorImage)
+
+    result.extend([tool, wand, select, adjust, pen, blend, eraser, layers,
+                selector])
+
+    return result
+
+    """wand = Button(app, 10, 3*rowWidth, 15, brushOpacityUp, "adjust", False)
+    wand.getImage(app)
+    result.append(wand)
+
+    select = Button(app, 10, 4*rowWidth, 15, brushOpacityUp, "select", False)
+    select.getImage(app)
+    result.append(select)
+
+    adjust = Button(app, 10, 5*rowWidth, 15, brushOpacityUp, "adjust", False)
+    adjust.getImage(app)
+    result.append(adjust)
+"""
     return result
 
 def drawButtons(app, canvas):
@@ -52,7 +127,8 @@ def drawButtons(app, canvas):
 
 def checkButtons(app, x, y):
     for button in app.mainButtons:
-        button.checkClicked(x,y)
+        button.checkClicked(x,y, app)
+        #button.getImage(app)
 
     """
     rotate and zoom
@@ -157,5 +233,6 @@ def redrawAll(app, canvas):
     
     drawWindows(app, canvas)
     drawButtons(app, canvas)
+    #canvas.create_image(20, app.height//2, image=ImageTk.PhotoImage(app.image13))
 
 runApp(width=800, height=550)
