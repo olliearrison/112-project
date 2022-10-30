@@ -40,6 +40,8 @@ class Button(object):
             print("Button do thingos")
             self.response(self.app)
             self.isActive = not(self.isActive)
+            return True
+        return False
             # self.image = self.getImage(app)
 
     def drawButton(self, app, canvas):

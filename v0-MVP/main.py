@@ -1,7 +1,7 @@
 from cmu_112_graphics import *
 from windows import *
 from background import *
-from controller import *
+from buttons import *
 
 """
 Questions:
@@ -46,31 +46,22 @@ def getImage(name, app):
     imageTitleActive = "buttons/" + name + "-active" + ".png"
 
     image = app.loadImage(imageTitle)
-    image = app.scaleImage(image, 1/250)
+    image = app.scaleImage(image, 1/10)
 
     imageActive = app.loadImage(imageTitleActive)
-    imageActive = app.scaleImage(imageActive, 1/250)
+    imageActive = app.scaleImage(imageActive, 1/10)
     return (image, imageActive)
 
 def createButtons(app):
     result = []
-
-    # first row (24)
-    rows = 20
-    rowWidth = app.width//rows
-
-    # (size, x, y, response, isActive, image1, image2)
-
-
-    #gallery = Button(app, 40, 1*rowWidth, 10, brushOpacityUp, "gallery", False)
-    #gallery.getImage(app)
-    #result.append(gallery)
+    cols = 20
+    rowWidth = app.width//cols
 
     toolImage = getImage("tool", app)
     tool = Button(app, 10, 2*rowWidth, 15, brushOpacityUp, False, 
     toolImage)
 
-    wandImage = getImage("adjust", app)
+    wandImage = getImage("wand", app)
     wand = Button(app, 10, 3*rowWidth, 15, brushOpacityUp, False, 
     wandImage)
 
@@ -102,23 +93,18 @@ def createButtons(app):
     selector = Button(app, 10, 15, app.height//2, brushOpacityUp, False, 
     selectorImage)
 
+    forwardImage = getImage("forward", app)
+    forward = Button(app, 10, 15, 7*app.height//9 - rowWidth//2, brushOpacityUp, False, 
+    forwardImage)
+
+    backwardImage = getImage("backward", app)
+    backward = Button(app, 10, 15, int(7*app.height//9 - rowWidth*1.25), 
+    brushOpacityDown, False, 
+    backwardImage)
+
     result.extend([tool, wand, select, adjust, pen, blend, eraser, layers,
-                selector])
+                selector, forward, backward])
 
-    return result
-
-    """wand = Button(app, 10, 3*rowWidth, 15, brushOpacityUp, "adjust", False)
-    wand.getImage(app)
-    result.append(wand)
-
-    select = Button(app, 10, 4*rowWidth, 15, brushOpacityUp, "select", False)
-    select.getImage(app)
-    result.append(select)
-
-    adjust = Button(app, 10, 5*rowWidth, 15, brushOpacityUp, "adjust", False)
-    adjust.getImage(app)
-    result.append(adjust)
-"""
     return result
 
 def drawButtons(app, canvas):
@@ -127,21 +113,9 @@ def drawButtons(app, canvas):
 
 def checkButtons(app, x, y):
     for button in app.mainButtons:
-        button.checkClicked(x,y, app)
-        #button.getImage(app)
-
-    """
-    rotate and zoom
-
-    current strategy:
-    - display image for mouse to click over
-    - calculate margin
-    - subtract the margin from the x and y value
-    - apply the change and display
-
-    - 
-    """
-
+        if button.checkClicked(x,y, app):
+            return True
+    return False
 
 def response():
     print("response has been called")
@@ -149,11 +123,11 @@ def response():
 def mousePressed(app, event):
     (x, y) = event.x, event.y
 
-    checkButtons(app, x, y)
-    if (insideImage(app,x,y) != None):
-        imageX, imageY = insideImage(app,x,y)
-        print(imageX,imageY)
-        drawPixels(app,imageX,imageY)
+    if not(checkButtons(app, x, y)):
+        if (insideImage(app,x,y) != None):
+            imageX, imageY = insideImage(app,x,y)
+            print(imageX,imageY)
+            drawPixels(app,imageX,imageY)
 
 def keyPressed(app, event):
     if event.key == "Up":
