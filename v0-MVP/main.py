@@ -1,14 +1,15 @@
 from cmu_112_graphics import *
 from windows import *
 from background import *
-#from buttons import *
 
 """
 to do:
-
-- add zoom
-- put code into multiple pages without making things break
+- change button color based on whether they are selected
+- generate circle shaped brushes based on the size
+- create widget for changing opacity/brush size
 - color selection
+- organize code
+- put code into multiple pages without making things break
 - create window to figure out layers
 
 to do later:
@@ -68,60 +69,60 @@ def createButtons(app):
     # opens tools
     toolImage = getImage("tool", app)
     tool = Button(app, 10, 2*rowWidth, 15, brushOpacityUp, False, 
-    toolImage)
+    toolImage, "tool")
 
     # opens full layer adjustments
     wandImage = getImage("wand", app)
     wand = Button(app, 10, 3*rowWidth, 15, brushOpacityUp, False, 
-    wandImage)
+    wandImage, "wand")
 
     # allows user to select parts of the layer they are on
     selectImage = getImage("select", app)
     select = Button(app, 10, 4*rowWidth, 15, brushOpacityUp, False, 
-    selectImage)
+    selectImage, "select")
 
     # allows the user to adjust the selection
     adjustImage = getImage("adjust", app)
     adjust = Button(app, 10, 5*rowWidth, 15, brushOpacityUp, False, 
-    adjustImage)
+    adjustImage, "adjust")
 
     # either switches to the selected pen or opens a window to choose a pen
     penImage = getImage("pen", app)
     pen = Button(app, 10, 15*rowWidth, 15, penMode, False, 
-    penImage)
+    penImage, "pen")
 
     # either switches to the selected blender or opens a window to choose a
     # blender
     blendImage = getImage("blend", app)
     blend = Button(app, 10, 16*rowWidth, 15, brushOpacityUp, False, 
-    blendImage)
+    blendImage, "blend")
 
     # either switches to the selected eraser or opens a window to choose 
     # a eraser
     eraserImage = getImage("eraser", app)
     eraser = Button(app, 10, 17*rowWidth, 15, eraserMode, False, 
-    eraserImage)
+    eraserImage, "eraser")
 
     # opens layers
     layersImage = getImage("layers", app)
     layers = Button(app, 10, 18*rowWidth, 15, brushOpacityUp, False, 
-    layersImage)
+    layersImage, "layers")
 
     # allows the user to select a color from the canvas
     selectorImage = getImage("selector", app)
-    selector = Button(app, 10, 15, app.height//2, brushOpacityUp, False, 
-    selectorImage)
+    selector = Button(app, 10, 15, app.height//2, colorSelect, False, 
+    selectorImage, "selector")
 
     # allows the user to go forward if they just went backward
     forwardImage = getImage("forward", app)
     forward = Button(app, 10, 15, 7*app.height//9 - rowWidth//2, brushOpacityUp, False, 
-    forwardImage)
+    forwardImage, "forward")
 
     # allows the user to go backwards
     backwardImage = getImage("backward", app)
     backward = Button(app, 10, 15, int(7*app.height//9 - rowWidth*1.25), 
     brushOpacityDown, False, 
-    backwardImage)
+    backwardImage, "backward")
 
     # adds each of the buttons and returns them
     result.extend([tool, wand, select, adjust, pen, blend, eraser, layers,
@@ -133,11 +134,21 @@ def drawButtons(app, canvas):
     for button in app.mainButtons:
         button.drawButton(app, canvas)
 
+def changeMode(app, mode):
+    app.userMode = mode
+    for button in app.mainButtons:
+        if button.mode == mode:
+            button.resetAllElse(app)
+            return True
+    print("no button found")
+    return False
+
 # checks whether any of the buttons have been clicked
 def checkButtons(app, x, y):
     for button in app.mainButtons:
         # once a button has been clicked, stop looking
         if button.checkClicked(x,y, app):
+            button.resetAllElse(app)
             return True
     return False
 
@@ -155,9 +166,15 @@ def mousePressed(app, event):
         coors = insideImage(app,x,y)
         # if the coordinates are in the image
         if (coors != None):
-            imageX, imageY = coors[0], coors[1]
-            # draw pixels based on that
-            drawPixels(app,imageX,imageY)
+            if (app.userMode == "colorselect"):
+                r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
+                app.currentBrush = (r,g,b,a)
+                changeMode(app, "pen")
+                #app.selector.isActive = False
+            else:
+                imageX, imageY = coors[0], coors[1]
+                # draw pixels based on that
+                drawPixels(app,imageX,imageY)
 
 # navigate options with keys
 def keyPressed(app, event):
@@ -170,13 +187,13 @@ def keyPressed(app, event):
         print(app.scaleFactor)
         app.scaleFactor = round(app.scaleFactor + .1, 1)
         app.image2 = app.scaleImage(app.image1, app.scaleFactor)
-        app.background2 = app.scaleImage(app.background2, app.scaleFactor)
+        app.background2 = app.scaleImage(app.background1, app.scaleFactor)
     elif event.key == "s":
         print("zoom out")
         print(app.scaleFactor)
         app.scaleFactor = round(app.scaleFactor - .1, 1)
         app.image2 = app.scaleImage(app.image1, app.scaleFactor)
-        app.background2 = app.scaleImage(app.background2, app.scaleFactor)
+        app.background2 = app.scaleImage(app.background1, app.scaleFactor)
     elif event.key == "a":
         print("rotate counterclockwise")
     elif event.key == "d":
@@ -220,6 +237,8 @@ def mouseReleased(app, event):
     app.oldX = None
     app.oldY = None
 
+# adjust the x and y values within the app to correspond the the x and y values
+# on the canvas
 def insideImage(app,x,y):
     marginX = (app.width - (app.imageWidth*app.scaleFactor))//2
     marginY = (app.height - (app.imageHeight*app.scaleFactor))//2
@@ -227,6 +246,7 @@ def insideImage(app,x,y):
     imageY = int((y - marginY)//app.scaleFactor)
     return (imageX,imageY)
 
+# check whether the coordinates are within the canvas
 def coorsWork(app, x, y):
     xWorks = (x < app.imageWidth) and (x > 0)
     yWorks = (y < app.imageHeight) and (y > 0)
@@ -283,7 +303,7 @@ def redrawAll(app, canvas):
 
     centerX = app.width//2
     centerY = app.height//2
-    canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.background1))
+    canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.background2))
 
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
     

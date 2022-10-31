@@ -20,7 +20,7 @@ class Button(object):
     # x and y refer to the top left corner
     # response passes in the function that is
     # if the future, make the option for rectangular buttons
-    def __init__(self, app, size, x, y, response, isActive, images):
+    def __init__(self, app, size, x, y, response, isActive, images, mode):
         self.app = app
         self.size = size
         self.x = x
@@ -28,12 +28,15 @@ class Button(object):
         self.response = response
         self.isActive = isActive
         self.images = images
+        self.mode = mode
 
-    def inactive(self):
-        self.isActive = False
+    def resetAllElse(self, app):
+        self.isActive = True
+        for button in app.mainButtons:
+            if self != button:
+                button.isActive = False
 
     def checkClicked(self,x,y,app):
-
         x1 = self.x
         x2 = self.x + self.size
         y1 = self.y
@@ -42,7 +45,7 @@ class Button(object):
         if (x >= x1 and x <= x2) and (y >= y1 and y <= y2):
             print("Button do thingos")
             self.response(self.app)
-            self.isActive = not(self.isActive)
+            self.isActive = True
             return True
         return False
             # self.image = self.getImage(app)
