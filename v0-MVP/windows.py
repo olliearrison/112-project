@@ -29,6 +29,9 @@ class Button(object):
         self.isActive = isActive
         self.images = images
 
+    def inactive(self):
+        self.isActive = False
+
     def checkClicked(self,x,y,app):
 
         x1 = self.x

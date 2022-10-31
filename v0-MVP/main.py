@@ -1,7 +1,7 @@
 from cmu_112_graphics import *
 from windows import *
 from background import *
-from buttons import *
+#from buttons import *
 
 """
 to do:
@@ -23,15 +23,19 @@ def appStarted(app):
     app.margin = 5
     app.imageWidth, app.imageHeight = 400, 450
     bgColor = (255, 255, 255)
-    app.currentBrush = (255, 255, 255, 110)
+    app.currentBrush = (10, 20, 255, 110)
     app.scaleFactor = 1
     app.rotation = 0
 
     # define primary image in RGBA (includes opacity 0-255)
+    app.background1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+    (255,255,255,255))
+    app.background2 = app.scaleImage(app.background1, app.scaleFactor)
+
     app.image1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
-    bgColor)
+    (255,255,255,0))
     # scales image
-    app.image1 = app.scaleImage(app.image1, app.scaleFactor)
+    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
     # holds the most recent x and y position on the canvas
     app.oldX = None
@@ -158,13 +162,21 @@ def mousePressed(app, event):
 # navigate options with keys
 def keyPressed(app, event):
     if event.key == "Up":
-        adjustBrushOpacity(app, -10)
-    elif event.key == "Down":
         adjustBrushOpacity(app, 10)
+    elif event.key == "Down":
+        adjustBrushOpacity(app, -10)
     elif event.key == "w":
         print("zoom in")
+        print(app.scaleFactor)
+        app.scaleFactor = round(app.scaleFactor + .1, 1)
+        app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+        app.background2 = app.scaleImage(app.background2, app.scaleFactor)
     elif event.key == "s":
         print("zoom out")
+        print(app.scaleFactor)
+        app.scaleFactor = round(app.scaleFactor - .1, 1)
+        app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+        app.background2 = app.scaleImage(app.background2, app.scaleFactor)
     elif event.key == "a":
         print("rotate counterclockwise")
     elif event.key == "d":
@@ -209,21 +221,26 @@ def mouseReleased(app, event):
     app.oldY = None
 
 def insideImage(app,x,y):
-    marginX = (app.width - app.imageWidth)//2
-    marginY = (app.height - app.imageHeight)//2
-    imageX = int((x - marginX)*app.scaleFactor)
-    imageY = int((y - marginY)*app.scaleFactor)
+    marginX = (app.width - (app.imageWidth*app.scaleFactor))//2
+    marginY = (app.height - (app.imageHeight*app.scaleFactor))//2
+    imageX = int((x - marginX)//app.scaleFactor)
+    imageY = int((y - marginY)//app.scaleFactor)
     return (imageX,imageY)
+
+def coorsWork(app, x, y):
+    xWorks = (x < app.imageWidth) and (x > 0)
+    yWorks = (y < app.imageHeight) and (y > 0)
+    return xWorks and yWorks
 
 def drawLine(app, x1, y1, x2, y2):
     draw = ImageDraw.Draw(app.image1)
-    xWorks = (x2 < app.imageWidth) and (x2 > 0)
-    yWorks = (y2 < app.imageHeight) and (y2 > 0)
-    if xWorks and yWorks:
+    if coorsWork(app, x2, y2):
         r,g,b,a = app.image1.getpixel((x2,y2))
         color = newPixelColor(app, (r,g,b,a), app.currentBrush)
 
         draw.line((x1, y1, x2, y2), width=7, fill= color)
+    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+    app.background2 = app.scaleImage(app.background1, app.scaleFactor)
 
 def drawPixels(app,x,y):
     for row in range(-2,3):
@@ -231,12 +248,12 @@ def drawPixels(app,x,y):
             drawPixel(app, x+row, y+col)
 
 def drawPixel(app, x, y):
-    xWorks = (x < app.imageWidth) and (x > 0)
-    yWorks = (y < app.imageHeight) and (y > 0)
-    if xWorks and yWorks:
+    if coorsWork(app, x, y):
         r,g,b,a = app.image1.getpixel((x,y))
         color = newPixelColor(app, (r,g,b,a), app.currentBrush)
         app.image1.putpixel((x,y),color)
+    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+    app.background2 = app.scaleImage(app.background1, app.scaleFactor)
 
 def newPixelColor(app, init, new):
     if app.userMode == "pen":
@@ -266,7 +283,9 @@ def redrawAll(app, canvas):
 
     centerX = app.width//2
     centerY = app.height//2
-    canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image1))
+    canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.background1))
+
+    canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
     
     drawWindows(app, canvas)
     drawButtons(app, canvas)
