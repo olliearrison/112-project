@@ -298,6 +298,16 @@ def mouseDragged(app, event):
     app.oldX = x
     app.oldY = y
 
+def rgbString(r, g, b, a):
+    a = a/255
+    R,G,B = (255,255,255)
+    r2 = int(r * a + (1.0 - a) * R)
+    g2 = int(g * a + (1.0 - a) * G)
+    b2 = int(b * a + (1.0 - a) * B)
+    # Don't worry about the :02x part, but for the curious,
+    # it says to use hex (base 16) with two digits.
+    return f'#{r2:02x}{g2:02x}{b2:02x}'
+
 def redrawAll(app, canvas):
     drawBackground(app, canvas)
 
@@ -308,6 +318,15 @@ def redrawAll(app, canvas):
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
     
     drawWindows(app, canvas)
+    rowWidth = app.width//20
+    x = 19*rowWidth
+    y = 18
+    radius = 10
+    r,g,b,a = app.currentBrush
+    color = rgbString(r, g, b, a)
+
     drawButtons(app, canvas)
+    canvas.create_oval(x-radius, y-radius, x+radius, y+radius, 
+    fill = color, outline = color)
 
 runApp(width=800, height=550)
