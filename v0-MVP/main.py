@@ -4,13 +4,14 @@ from background import *
 
 """
 to do:
-- change button color based on whether they are selected
-- generate circle shaped brushes based on the size
+- comment code
+- generate pixelated circles based on radius
 - create widget for changing opacity/brush size
-- color selection
-- organize code
+- organize code: no redundancies
 - put code into multiple pages without making things break
 - create window to figure out layers
+- make everything on the app scale when the window size is changed 
+(use similar strategy as for robot)
 
 to do later:
 - add rotation
@@ -47,6 +48,16 @@ def appStarted(app):
 
     # creates the buttons
     app.mainButtons = createButtons(app)
+
+    app.barMoving = False
+    app.barCurrent = app.height/2 -70 - 50 + 35
+
+
+    app.opacitySlider = Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
+                    True, app.height/2 - 40)
+
+    app.sizeSlider = Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
+                    True, app.height/2 + 10)
 
 # retreives the buttons, scales them, and returns them in a tuple
 def getImage(name, app):
@@ -110,17 +121,17 @@ def createButtons(app):
 
     # allows the user to select a color from the canvas
     selectorImage = getImage("selector", app)
-    selector = Button(app, 10, 15, app.height//2, colorSelect, False, 
+    selector = Button(app, 10, 15, app.height//2 - 25, colorSelect, False, 
     selectorImage, "selector")
 
     # allows the user to go forward if they just went backward
     forwardImage = getImage("forward", app)
-    forward = Button(app, 10, 15, 7*app.height//9 - rowWidth//2, brushOpacityUp, False, 
+    forward = Button(app, 10, 15, 10 + 7*app.height//9 - rowWidth//2, brushOpacityUp, False, 
     forwardImage, "forward")
 
     # allows the user to go backwards
     backwardImage = getImage("backward", app)
-    backward = Button(app, 10, 15, int(7*app.height//9 - rowWidth*1.25), 
+    backward = Button(app, 10, 15, 20 + int(7*app.height//9 - rowWidth*1.25), 
     brushOpacityDown, False, 
     backwardImage, "backward")
 
@@ -158,6 +169,8 @@ def response():
 
 # when the mouse has been pressed
 def mousePressed(app, event):
+    app.barMoving = True
+
     (x, y) = event.x, event.y
 
     # check the buttons, and if they haven't been pressed
@@ -285,7 +298,24 @@ def newPixelColor(app, init, new):
     else:
         return (255,255,255,255)
 
+def dragBar(app, event):
+    width = 10
+    height = 50
+    bound1 = app.height/2 - height + width - 90 - 15
+    bound2 = app.height/2 + height - width - 90 + 15
+
+    if app.barMoving:
+        if (event.y < bound1):
+            app.barCurrent = bound1
+        elif (event.y > bound2):
+            app.barCurrent = bound2
+        else:
+            app.barCurrent = event.y
+
 def mouseDragged(app, event):
+    app.opacitySlider.dragSlider(app, event)
+    app.sizeSlider.dragSlider(app, event)
+
     (x, y) = event.x, event.y
     imageX, imageY = insideImage(app,x,y)
 
@@ -328,5 +358,8 @@ def redrawAll(app, canvas):
     drawButtons(app, canvas)
     canvas.create_oval(x-radius, y-radius, x+radius, y+radius, 
     fill = color, outline = color)
+
+    app.opacitySlider.drawSlider(app, canvas)
+    app.sizeSlider.drawSlider(app, canvas)
 
 runApp(width=800, height=550)

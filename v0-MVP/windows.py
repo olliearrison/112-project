@@ -60,3 +60,53 @@ class Button(object):
             canvas.create_image(self.x + self.size//2, self.y + self.size//2, 
             image=ImageTk.PhotoImage(self.images[0]))
 
+
+class Slider:
+    def __init__(self, app, sizeX, sizeY, slideSize, x, y, response, isActive, 
+    amount):
+        self.app = app
+        self.sizeX = sizeX # 10
+        self.sizeY = sizeY # 60
+        self.slideSize = slideSize
+        self.x = x # 20
+        self.y = y # app.height/2 - 90
+        self.response = response
+        self.isActive = isActive
+        self.amount = amount
+
+    def getPercent():
+        print("return percent")
+
+    def drawSlider(self, app, canvas):
+
+        #
+        canvas.create_rectangle(self.x - self.sizeX, self.y - self.sizeY,
+                            self.x + self.sizeX, self.y + self.sizeY,
+                            fill = "#252525", outline = "#252525")
+        
+        #
+        canvas.create_rectangle(self.x - self.sizeX, self.amount - self.slideSize,
+                            self.x + self.sizeX, self.amount + self.slideSize,
+                            fill = "#868686", outline = "#868686")
+
+    def dragSlider(self, app, event):
+
+        bound1 = self.y - self.sizeY + self.slideSize
+        bound2 = self.y + self.sizeY - self.slideSize
+
+        if self.isActive:
+            if (event.y < bound1):
+                self.amount = bound1
+            elif (event.y > bound2):
+                self.amount = bound2
+            else:
+                self.amount = event.y
+
+
+    # difference is a construct
+    # comparitive difference
+    # emergence of a conciousness comes from interactions within the brain
+    # photo vs exist
+
+        
+    
