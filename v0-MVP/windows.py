@@ -101,12 +101,18 @@ class Slider:
                 self.amount = bound2
             else:
                 self.amount = event.y
+    
+    def checkClicked(self, x, y, app):
+        x1 = self.x
+        x2 = self.x + self.sizeX
+        y1 = self.y - self.sizeY + self.slideSize
+        y2 = self.y + self.sizeY - self.slideSize
 
-
-    # difference is a construct
-    # comparitive difference
-    # emergence of a conciousness comes from interactions within the brain
-    # photo vs exist
+        if (x >= x1 and x <= x2) and (y >= y1 and y <= y2):
+            self.isActive = True
+            print("inside bounds")
+            return True
+        return False
 
         
     

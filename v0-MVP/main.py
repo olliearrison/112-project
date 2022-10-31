@@ -54,10 +54,13 @@ def appStarted(app):
 
 
     app.opacitySlider = Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
-                    True, app.height/2 - 40)
+                    False, app.height/2 - 50)
 
     app.sizeSlider = Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
                     True, app.height/2 + 10)
+
+    app.mainSliders = []
+    app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
 
 # retreives the buttons, scales them, and returns them in a tuple
 def getImage(name, app):
@@ -160,6 +163,11 @@ def checkButtons(app, x, y):
         # once a button has been clicked, stop looking
         if button.checkClicked(x,y, app):
             button.resetAllElse(app)
+            return True
+    for slider in app.mainSliders:
+        if not(slider.checkClicked(x,y,app)):
+            slider.isActive = False
+        else:
             return True
     return False
 
@@ -297,20 +305,6 @@ def newPixelColor(app, init, new):
         return (r,g,b,a)
     else:
         return (255,255,255,255)
-
-def dragBar(app, event):
-    width = 10
-    height = 50
-    bound1 = app.height/2 - height + width - 90 - 15
-    bound2 = app.height/2 + height - width - 90 + 15
-
-    if app.barMoving:
-        if (event.y < bound1):
-            app.barCurrent = bound1
-        elif (event.y > bound2):
-            app.barCurrent = bound2
-        else:
-            app.barCurrent = event.y
 
 def mouseDragged(app, event):
     app.opacitySlider.dragSlider(app, event)
