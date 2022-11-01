@@ -3,6 +3,15 @@ from windows import *
 from background import *
 
 """
+questions
+- how to rotate
+- generating brushes
+- what else to do to get to MVC
+- code for buttons
+- solution: two event checking, compile into c python
+- (use image rather than pixel for brush)
+one way imports
+
 to do:
 - comment code
 - generate pixelated circles based on radius
@@ -25,7 +34,7 @@ def appStarted(app):
     app.margin = 5
     app.imageWidth, app.imageHeight = 400, 450
     bgColor = (255, 255, 255)
-    app.currentBrush = (10, 20, 255, 110)
+    app.currentBrush = (10, 20, 255, 255)
     app.scaleFactor = 1
     app.rotation = 0
 
@@ -53,11 +62,11 @@ def appStarted(app):
     app.barCurrent = app.height/2 -70 - 50 + 35
 
 
-    app.opacitySlider = Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
+    app.sizeSlider = Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
                     False, app.height/2 - 50)
 
-    app.sizeSlider = Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
-                    True, app.height/2 + 10)
+    app.opacitySlider = Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
+                    True, 285)
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
@@ -143,6 +152,9 @@ def createButtons(app):
                 selector, forward, backward])
     return result
 
+def generateBrush(radius):
+    return 42
+
 # draws each of the main buttons
 def drawButtons(app, canvas):
     for button in app.mainButtons:
@@ -177,7 +189,8 @@ def response():
 
 # when the mouse has been pressed
 def mousePressed(app, event):
-    app.barMoving = True
+
+    #app.barMoving = True
 
     (x, y) = event.x, event.y
 
@@ -190,6 +203,7 @@ def mousePressed(app, event):
             if (app.userMode == "colorselect"):
                 r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
                 app.currentBrush = (r,g,b,a)
+                app.opacitySlider.setAmount(a)
                 changeMode(app, "pen")
                 #app.selector.isActive = False
             else:
@@ -242,6 +256,10 @@ def penMode(app):
 def eraserMode(app):
     app.userMode = "eraser"
     print("eraser mode")
+
+def setBrushOpacity(app, amount):
+    app.currentBrush = (app.currentBrush[0],
+    app.currentBrush[1],app.currentBrush[2],amount)
 
 # adjust the opacity
 def adjustBrushOpacity(app, amount):
@@ -307,7 +325,7 @@ def newPixelColor(app, init, new):
         return (255,255,255,255)
 
 def mouseDragged(app, event):
-    app.opacitySlider.dragSlider(app, event)
+    setBrushOpacity(app, app.opacitySlider.dragSlider(app, event))
     app.sizeSlider.dragSlider(app, event)
 
     (x, y) = event.x, event.y

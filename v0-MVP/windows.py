@@ -74,8 +74,21 @@ class Slider:
         self.isActive = isActive
         self.amount = amount
 
-    def getPercent():
-        print("return percent")
+    # num is 0-255
+    def setAmount(self, num):
+        bound1 = self.y - self.sizeY + self.slideSize
+        bound2 = self.y + self.sizeY - self.slideSize
+        den = bound2 - bound1
+        adjust = num/255
+        self.amount = bound2 - (den*adjust)
+        
+
+    def getPercent(self):
+        bound1 = self.y - self.sizeY + self.slideSize
+        bound2 = self.y + self.sizeY - self.slideSize
+        den = bound2 - bound1
+        num = den - (self.amount - bound1)
+        return num/den
 
     def drawSlider(self, app, canvas):
 
@@ -101,6 +114,10 @@ class Slider:
                 self.amount = bound2
             else:
                 self.amount = event.y
+
+        lastValue = int(app.opacitySlider.getPercent() * 255)
+        return lastValue
+
     
     def checkClicked(self, x, y, app):
         x1 = self.x
