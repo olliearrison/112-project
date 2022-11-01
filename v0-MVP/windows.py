@@ -115,7 +115,8 @@ class Slider:
             else:
                 self.amount = event.y
 
-        lastValue = int(app.opacitySlider.getPercent() * 255)
+        lastValue = int(self.getPercent() * 255)
+        
         return lastValue
 
     

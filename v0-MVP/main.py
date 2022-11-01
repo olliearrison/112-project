@@ -4,13 +4,12 @@ from background import *
 
 """
 questions
-- how to rotate
+- how to rotate (pil)
 - generating brushes
-- what else to do to get to MVC
-- code for buttons
-- solution: two event checking, compile into c python
-- (use image rather than pixel for brush)
-one way imports
+- two event checking
+- compile into c python
+- use image rather than pixel for brush
+- one way imports
 
 to do:
 - comment code
@@ -35,6 +34,7 @@ def appStarted(app):
     app.imageWidth, app.imageHeight = 400, 450
     bgColor = (255, 255, 255)
     app.currentBrush = (10, 20, 255, 255)
+    app.brushSize = 7
     app.scaleFactor = 1
     app.rotation = 0
 
@@ -63,7 +63,7 @@ def appStarted(app):
 
 
     app.sizeSlider = Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
-                    False, app.height/2 - 50)
+                    False, app.height/2 - 70)
 
     app.opacitySlider = Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
                     True, 285)
@@ -257,6 +257,14 @@ def eraserMode(app):
     app.userMode = "eraser"
     print("eraser mode")
 
+def setBrushSize(app, amount):
+    print(amount)
+    amount = ((amount/255)*50) + 1
+    if (amount >= 3) and (amount <= 300):
+        final = int(amount)
+        print(final)
+        app.brushSize = final
+
 def setBrushOpacity(app, amount):
     app.currentBrush = (app.currentBrush[0],
     app.currentBrush[1],app.currentBrush[2],amount)
@@ -297,7 +305,7 @@ def drawLine(app, x1, y1, x2, y2):
         r,g,b,a = app.image1.getpixel((x2,y2))
         color = newPixelColor(app, (r,g,b,a), app.currentBrush)
 
-        draw.line((x1, y1, x2, y2), width=7, fill= color)
+        draw.line((x1, y1, x2, y2), width=app.brushSize, fill= color)
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
     app.background2 = app.scaleImage(app.background1, app.scaleFactor)
 
@@ -326,7 +334,8 @@ def newPixelColor(app, init, new):
 
 def mouseDragged(app, event):
     setBrushOpacity(app, app.opacitySlider.dragSlider(app, event))
-    app.sizeSlider.dragSlider(app, event)
+    setBrushSize(app, app.sizeSlider.dragSlider(app,event))
+    #app.sizeSlider.dragSlider(app, event)
 
     (x, y) = event.x, event.y
     imageX, imageY = insideImage(app,x,y)
