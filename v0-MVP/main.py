@@ -1,32 +1,36 @@
 from cmu_112_graphics import *
 from windows import *
 from background import *
+from coors import *
+import math
 
 """
-questions
-- how to rotate (pil)
-- generating brushes
-- two event checking
-- compile into c python
-- use image rather than pixel for brush
-- one way imports
+pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
+
+- save option
 
 to do:
-- comment code
-- generate pixelated circles based on radius
-- create widget for changing opacity/brush size
-- organize code: no redundancies
-- put code into multiple pages without making things break
-- create window to figure out layers
 - make everything on the app scale when the window size is changed 
 (use similar strategy as for robot)
+- new brush size
+- new brush opacity
+- better code structure
+- fix zoom
 
 to do later:
-- add rotation
+- add rotation (pillow)
+- non square/word based buttons (for gallery and on option pages)
+- comment code
+- organize code: no redundancies
+- create window to create and delete layers
+
+must be after MVC:
 - undo, redo
 - numpy
+- compile into c python
 - transparent blur windows (brushes, erasers, layers, colors)
-
+- threading: multi threading 
+- pygame maybe
 """
 
 def appStarted(app):
@@ -47,6 +51,14 @@ def appStarted(app):
     (255,255,255,0))
     # scales image
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+
+    app.brush = Image.open("brush.png").convert("RGBA")
+    app.brush = app.scaleImage(app.brush, 1/5)
+    app.brushWidth, app.brushHeight = app.brush.size
+
+    #app.brush.paste(app.brushL, app.brush)
+    #app.brush = app.brush.convert("RGBA")
+
 
     # holds the most recent x and y position on the canvas
     app.oldX = None
@@ -91,22 +103,22 @@ def createButtons(app):
 
     # opens tools
     toolImage = getImage("tool", app)
-    tool = Button(app, 10, 2*rowWidth, 15, brushOpacityUp, False, 
+    tool = Button(app, 10, 2*rowWidth, 15, saveImage, False, 
     toolImage, "tool")
 
     # opens full layer adjustments
     wandImage = getImage("wand", app)
-    wand = Button(app, 10, 3*rowWidth, 15, brushOpacityUp, False, 
+    wand = Button(app, 10, 3*rowWidth, 15, response, False, 
     wandImage, "wand")
 
     # allows user to select parts of the layer they are on
     selectImage = getImage("select", app)
-    select = Button(app, 10, 4*rowWidth, 15, brushOpacityUp, False, 
+    select = Button(app, 10, 4*rowWidth, 15, response, False, 
     selectImage, "select")
 
     # allows the user to adjust the selection
     adjustImage = getImage("adjust", app)
-    adjust = Button(app, 10, 5*rowWidth, 15, brushOpacityUp, False, 
+    adjust = Button(app, 10, 5*rowWidth, 15, response, False, 
     adjustImage, "adjust")
 
     # either switches to the selected pen or opens a window to choose a pen
@@ -117,7 +129,7 @@ def createButtons(app):
     # either switches to the selected blender or opens a window to choose a
     # blender
     blendImage = getImage("blend", app)
-    blend = Button(app, 10, 16*rowWidth, 15, brushOpacityUp, False, 
+    blend = Button(app, 10, 16*rowWidth, 15, response, False, 
     blendImage, "blend")
 
     # either switches to the selected eraser or opens a window to choose 
@@ -128,29 +140,36 @@ def createButtons(app):
 
     # opens layers
     layersImage = getImage("layers", app)
-    layers = Button(app, 10, 18*rowWidth, 15, brushOpacityUp, False, 
+    layers = Button(app, 10, 18*rowWidth, 15, response, False, 
     layersImage, "layers")
 
     # allows the user to select a color from the canvas
     selectorImage = getImage("selector", app)
-    selector = Button(app, 10, 15, app.height//2 - 25, colorSelect, False, 
+    selector = Button(app, 10, 15, app.height//2 - 25, colorSelectMode, False, 
     selectorImage, "selector")
 
     # allows the user to go forward if they just went backward
     forwardImage = getImage("forward", app)
-    forward = Button(app, 10, 15, 10 + 7*app.height//9 - rowWidth//2, brushOpacityUp, False, 
+    forward = Button(app, 10, 15, 10 + 7*app.height//9 - rowWidth//2, response, False, 
     forwardImage, "forward")
 
     # allows the user to go backwards
     backwardImage = getImage("backward", app)
     backward = Button(app, 10, 15, 20 + int(7*app.height//9 - rowWidth*1.25), 
-    brushOpacityDown, False, 
+    response, False, 
     backwardImage, "backward")
 
     # adds each of the buttons and returns them
     result.extend([tool, wand, select, adjust, pen, blend, eraser, layers,
                 selector, forward, backward])
     return result
+
+def saveImage(app):
+    flatImage = Image.alpha_composite(app.background1, app.image2)
+    app.image2.save("result/clearImage.png","PNG")
+    flatImage.save("result/flatImage.png","PNG")
+    print("Image saved inside of result folder")
+
 
 def generateBrush(radius):
     return 42
@@ -189,9 +208,6 @@ def response():
 
 # when the mouse has been pressed
 def mousePressed(app, event):
-
-    #app.barMoving = True
-
     (x, y) = event.x, event.y
 
     # check the buttons, and if they haven't been pressed
@@ -200,6 +216,7 @@ def mousePressed(app, event):
         coors = insideImage(app,x,y)
         # if the coordinates are in the image
         if (coors != None):
+            #app.image2.paste(app.brush, (x, y), app.brush)
             if (app.userMode == "colorselect"):
                 r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
                 app.currentBrush = (r,g,b,a)
@@ -213,11 +230,7 @@ def mousePressed(app, event):
 
 # navigate options with keys
 def keyPressed(app, event):
-    if event.key == "Up":
-        adjustBrushOpacity(app, 10)
-    elif event.key == "Down":
-        adjustBrushOpacity(app, -10)
-    elif event.key == "w":
+    if event.key == "w":
         print("zoom in")
         print(app.scaleFactor)
         app.scaleFactor = round(app.scaleFactor + .1, 1)
@@ -234,16 +247,8 @@ def keyPressed(app, event):
     elif event.key == "d":
         print("rotate clockwise")
 
-# increase the brush opacity
-def brushOpacityUp(app):
-    adjustBrushOpacity(app, 10)
-
-# decrease the brush opacity
-def brushOpacityDown(app):
-    adjustBrushOpacity(app, -10)
-
 # select a color
-def colorSelect(app):
+def colorSelectMode(app):
     app.userMode = "colorselect"
     print("color select")
 
@@ -258,25 +263,14 @@ def eraserMode(app):
     print("eraser mode")
 
 def setBrushSize(app, amount):
-    print(amount)
     amount = ((amount/255)*50) + 1
     if (amount >= 3) and (amount <= 300):
         final = int(amount)
-        print(final)
         app.brushSize = final
 
 def setBrushOpacity(app, amount):
     app.currentBrush = (app.currentBrush[0],
     app.currentBrush[1],app.currentBrush[2],amount)
-
-# adjust the opacity
-def adjustBrushOpacity(app, amount):
-    # set the new value
-    checkValue = app.currentBrush[3] + amount
-    # if it is allowed, change the value
-    if checkValue >= 0 and checkValue <= 255:
-        app.currentBrush = (app.currentBrush[0],
-        app.currentBrush[1],app.currentBrush[2],checkValue)
 
 # when the mouse is released
 def mouseReleased(app, event):
@@ -284,35 +278,48 @@ def mouseReleased(app, event):
     app.oldX = None
     app.oldY = None
 
-# adjust the x and y values within the app to correspond the the x and y values
-# on the canvas
-def insideImage(app,x,y):
-    marginX = (app.width - (app.imageWidth*app.scaleFactor))//2
-    marginY = (app.height - (app.imageHeight*app.scaleFactor))//2
-    imageX = int((x - marginX)//app.scaleFactor)
-    imageY = int((y - marginY)//app.scaleFactor)
-    return (imageX,imageY)
+def getMidpoint(x1, y1, x2, y2):
+    newCoorX = (x1 + x2)//2
+    newCoorY = (y1 + y2)//2
+    return newCoorX, newCoorY
 
-# check whether the coordinates are within the canvas
-def coorsWork(app, x, y):
-    xWorks = (x < app.imageWidth) and (x > 0)
-    yWorks = (y < app.imageHeight) and (y > 0)
-    return xWorks and yWorks
+def getDistance(x1, y1, x2, y2):
+    return math.sqrt((x1-x2)**2 + (y1-y2)**2)
 
 def drawLine(app, x1, y1, x2, y2):
-    draw = ImageDraw.Draw(app.image1)
-    if coorsWork(app, x2, y2):
-        r,g,b,a = app.image1.getpixel((x2,y2))
-        color = newPixelColor(app, (r,g,b,a), app.currentBrush)
+    adjust = app.brushWidth //2
+    #app.brushHeight
+    app.image2.alpha_composite(app.brush, dest = (x2 - adjust, y2 - adjust))
 
-        draw.line((x1, y1, x2, y2), width=app.brushSize, fill= color)
-    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
-    app.background2 = app.scaleImage(app.background1, app.scaleFactor)
+    while (getDistance(x1, y1, x2, y2) > 5):
+        x1, y1 = getMidpoint(x1, y1, x2, y2)
+        app.image1.alpha_composite(app.brush, dest = (x1 - adjust, 
+        y1 - adjust))
+
+    #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+    #app.background2 = app.scaleImage(app.background1, app.scaleFactor)
+
+    #newCoorX = (x1 + x2)//2
+    #newCoorY = (y1 + y2)//2
+
+    #app.image2.alpha_composite(app.brush, dest = (newCoorX - adjust, 
+    #newCoorY - adjust))
+
+    #draw = ImageDraw.Draw(app.image1)
+    #if coorsWork(app, x2, y2):
+    #    r,g,b,a = app.image1.getpixel((x2,y2))
+    #    color = newPixelColor(app, (r,g,b,a), app.currentBrush)
+#
+   #     draw.line((x1, y1, x2, y2), width=app.brushSize, fill= color)
+
 
 def drawPixels(app,x,y):
-    for row in range(-2,3):
-        for col in range(-2,3):
-            drawPixel(app, x+row, y+col)
+    adjust = app.brushWidth //2
+    #app.brushHeight
+    app.image2.alpha_composite(app.brush, dest = (x - adjust, y - adjust))
+    #for row in range(-2,3):
+    #    for col in range(-2,3):
+    #        drawPixel(app, x+row, y+col)
 
 def drawPixel(app, x, y):
     if coorsWork(app, x, y):
@@ -349,14 +356,13 @@ def mouseDragged(app, event):
     app.oldX = x
     app.oldY = y
 
-def rgbString(r, g, b, a):
+def rgbaString(r, g, b, a):
     a = a/255
     R,G,B = (255,255,255)
+    # three lines adjusted from StackOverflow
     r2 = int(r * a + (1.0 - a) * R)
     g2 = int(g * a + (1.0 - a) * G)
     b2 = int(b * a + (1.0 - a) * B)
-    # Don't worry about the :02x part, but for the curious,
-    # it says to use hex (base 16) with two digits.
     return f'#{r2:02x}{g2:02x}{b2:02x}'
 
 def redrawAll(app, canvas):
@@ -366,6 +372,7 @@ def redrawAll(app, canvas):
     centerY = app.height//2
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.background2))
 
+
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
     
     drawWindows(app, canvas)
@@ -374,13 +381,14 @@ def redrawAll(app, canvas):
     y = 18
     radius = 10
     r,g,b,a = app.currentBrush
-    color = rgbString(r, g, b, a)
+    color = rgbaString(r, g, b, a)
 
     drawButtons(app, canvas)
+
     canvas.create_oval(x-radius, y-radius, x+radius, y+radius, 
     fill = color, outline = color)
-
     app.opacitySlider.drawSlider(app, canvas)
     app.sizeSlider.drawSlider(app, canvas)
+
 
 runApp(width=800, height=550)
