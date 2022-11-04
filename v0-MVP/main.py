@@ -7,8 +7,6 @@ import math
 """
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 
-- save option
-
 to do:
 - make everything on the app scale when the window size is changed 
 (use similar strategy as for robot)
@@ -16,8 +14,11 @@ to do:
 - new brush opacity
 - better code structure
 - fix zoom
+- add comments to everything
 
 to do later:
+- create brush class
+- create layer class
 - add rotation (pillow)
 - non square/word based buttons (for gallery and on option pages)
 - comment code
@@ -31,6 +32,8 @@ must be after MVC:
 - transparent blur windows (brushes, erasers, layers, colors)
 - threading: multi threading 
 - pygame maybe
+
+lock it before
 """
 
 def appStarted(app):
@@ -52,8 +55,13 @@ def appStarted(app):
     # scales image
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
+    app.originBrush = Image.open("brush.png").convert("RGBA")
+    app.originBrush = app.scaleImage(app.originBrush, 1/4)
+
     app.brush = Image.open("brush.png").convert("RGBA")
-    app.brush = app.scaleImage(app.brush, 1/5)
+    app.brushColored = Image.open("brush.png").convert("RGBA")
+
+    #app.brush = app.scaleImage(app.brush, 1/30)
     app.brushWidth, app.brushHeight = app.brush.size
 
     #app.brush.paste(app.brushL, app.brush)
@@ -79,6 +87,9 @@ def appStarted(app):
 
     app.opacitySlider = Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
                     True, 285)
+
+    app.opacitySlider.setAmount(255)
+    app.sizeSlider.setAmount(app.height/2 - 70)
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
@@ -263,14 +274,23 @@ def eraserMode(app):
     print("eraser mode")
 
 def setBrushSize(app, amount):
-    amount = ((amount/255)*50) + 1
-    if (amount >= 3) and (amount <= 300):
-        final = int(amount)
-        app.brushSize = final
+    final = (amount/20 + 1)/4
+    #app.brushSize = final
+    app.brush = app.scaleImage(app.originBrush, final)
+    app.brushWidth, app.brushHeight = app.brush.size
+    print(app.opacitySlider.amount)
+    setBrushOpacity(app, app.opacitySlider.getPercent() * 255)
 
-def setBrushOpacity(app, amount):
-    app.currentBrush = (app.currentBrush[0],
-    app.currentBrush[1],app.currentBrush[2],amount)
+def setBrushColor(app, r,b,g):
+    print("hi")
+
+def setBrushOpacity(app, aChange):
+    r,g,b,a = app.brush.split()
+    newA = aChange/255
+
+    a = a.point(lambda i: i * newA)
+    app.brushColored = Image.merge('RGBA', (r, g, b, a))
+
 
 # when the mouse is released
 def mouseReleased(app, event):
@@ -289,11 +309,11 @@ def getDistance(x1, y1, x2, y2):
 def drawLine(app, x1, y1, x2, y2):
     adjust = app.brushWidth //2
     #app.brushHeight
-    app.image2.alpha_composite(app.brush, dest = (x2 - adjust, y2 - adjust))
+    app.image2.alpha_composite(app.brushColored, dest = (x2 - adjust, y2 - adjust))
 
     while (getDistance(x1, y1, x2, y2) > 5):
         x1, y1 = getMidpoint(x1, y1, x2, y2)
-        app.image1.alpha_composite(app.brush, dest = (x1 - adjust, 
+        app.image1.alpha_composite(app.brushColored, dest = (x1 - adjust, 
         y1 - adjust))
 
     #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
@@ -316,7 +336,7 @@ def drawLine(app, x1, y1, x2, y2):
 def drawPixels(app,x,y):
     adjust = app.brushWidth //2
     #app.brushHeight
-    app.image2.alpha_composite(app.brush, dest = (x - adjust, y - adjust))
+    app.image2.alpha_composite(app.brushColored, dest = (x - adjust, y - adjust))
     #for row in range(-2,3):
     #    for col in range(-2,3):
     #        drawPixel(app, x+row, y+col)
@@ -340,11 +360,14 @@ def newPixelColor(app, init, new):
         return (255,255,255,255)
 
 def mouseDragged(app, event):
-    setBrushOpacity(app, app.opacitySlider.dragSlider(app, event))
-    setBrushSize(app, app.sizeSlider.dragSlider(app,event))
+    (x, y) = event.x, event.y
+
+    if (app.opacitySlider.checkClicked(x, y, app)):
+        setBrushOpacity(app, app.opacitySlider.dragSlider(app, event))
+    elif (app.sizeSlider.checkClicked(x, y, app)):
+        setBrushSize(app, app.sizeSlider.dragSlider(app,event))
     #app.sizeSlider.dragSlider(app, event)
 
-    (x, y) = event.x, event.y
     imageX, imageY = insideImage(app,x,y)
 
     if (app.oldX == None) or (app.oldY == None):
