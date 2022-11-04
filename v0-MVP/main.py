@@ -10,11 +10,10 @@ pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 to do:
 - make everything on the app scale when the window size is changed 
 (use similar strategy as for robot)
-- new brush size
-- new brush opacity
 - better code structure
 - fix zoom
 - add comments to everything
+- use recursion to improve midpoint
 
 to do later:
 - create brush class
@@ -30,10 +29,12 @@ must be after MVC:
 - numpy
 - compile into c python
 - transparent blur windows (brushes, erasers, layers, colors)
-- threading: multi threading 
+- threading: multi threading
 - pygame maybe
 
-lock it before
+plan to fix opacity:
+when brush is first clicked, start a new image that is multiplied by the
+opacity. after the brush is picked up, flatten this image into the layer
 """
 
 def appStarted(app):
@@ -44,6 +45,8 @@ def appStarted(app):
     app.brushSize = 7
     app.scaleFactor = 1
     app.rotation = 0
+    app.toBeDrawn = set()
+    app.timerDelay = 100
 
     # define primary image in RGBA (includes opacity 0-255)
     app.background1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
@@ -93,6 +96,11 @@ def appStarted(app):
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
+
+def timerFired(app):
+    for coor in app.toBeDrawn:
+        drawDot(app,coor[0],coor[1])
+    app.toBeDrawn = set()
 
 # retreives the buttons, scales them, and returns them in a tuple
 def getImage(name, app):
@@ -237,7 +245,7 @@ def mousePressed(app, event):
             else:
                 imageX, imageY = coors[0], coors[1]
                 # draw pixels based on that
-                drawPixels(app,imageX,imageY)
+                drawDot(app,imageX,imageY)
 
 # navigate options with keys
 def keyPressed(app, event):
@@ -298,56 +306,33 @@ def mouseReleased(app, event):
     app.oldX = None
     app.oldY = None
 
-def getMidpoint(x1, y1, x2, y2):
+# recursivly fills the points between the last two coordinates with dots
+# until they are spaced less than 10 pixels apart
+def recursiveMidpoint(app, x1, y1, x2, y2):
+    if (getDistance(x1, y1, x2, y2) < 10):
+        return None
     newCoorX = (x1 + x2)//2
     newCoorY = (y1 + y2)//2
-    return newCoorX, newCoorY
+    tup = (newCoorX, newCoorY)
+    app.toBeDrawn.add(tup)
+    # add a point between half way and the second
+    recursiveMidpoint(app, newCoorX, newCoorY, x2, y2)
+    # add a point between the first and half way
+    recursiveMidpoint(app, x1, y1, newCoorX, newCoorY)
 
+# returns the distance between
 def getDistance(x1, y1, x2, y2):
     return math.sqrt((x1-x2)**2 + (y1-y2)**2)
 
+# draws a line for the user
 def drawLine(app, x1, y1, x2, y2):
-    adjust = app.brushWidth //2
-    #app.brushHeight
+    adjust = app.brushWidth // 2
     app.image2.alpha_composite(app.brushColored, dest = (x2 - adjust, y2 - adjust))
+    recursiveMidpoint(app, x1, y1, x2, y2)
 
-    while (getDistance(x1, y1, x2, y2) > 5):
-        x1, y1 = getMidpoint(x1, y1, x2, y2)
-        app.image1.alpha_composite(app.brushColored, dest = (x1 - adjust, 
-        y1 - adjust))
-
-    #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
-    #app.background2 = app.scaleImage(app.background1, app.scaleFactor)
-
-    #newCoorX = (x1 + x2)//2
-    #newCoorY = (y1 + y2)//2
-
-    #app.image2.alpha_composite(app.brush, dest = (newCoorX - adjust, 
-    #newCoorY - adjust))
-
-    #draw = ImageDraw.Draw(app.image1)
-    #if coorsWork(app, x2, y2):
-    #    r,g,b,a = app.image1.getpixel((x2,y2))
-    #    color = newPixelColor(app, (r,g,b,a), app.currentBrush)
-#
-   #     draw.line((x1, y1, x2, y2), width=app.brushSize, fill= color)
-
-
-def drawPixels(app,x,y):
+def drawDot(app,x,y):
     adjust = app.brushWidth //2
-    #app.brushHeight
     app.image2.alpha_composite(app.brushColored, dest = (x - adjust, y - adjust))
-    #for row in range(-2,3):
-    #    for col in range(-2,3):
-    #        drawPixel(app, x+row, y+col)
-
-def drawPixel(app, x, y):
-    if coorsWork(app, x, y):
-        r,g,b,a = app.image1.getpixel((x,y))
-        color = newPixelColor(app, (r,g,b,a), app.currentBrush)
-        app.image1.putpixel((x,y),color)
-    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
-    app.background2 = app.scaleImage(app.background1, app.scaleFactor)
 
 def newPixelColor(app, init, new):
     if app.userMode == "pen":
@@ -371,7 +356,7 @@ def mouseDragged(app, event):
     imageX, imageY = insideImage(app,x,y)
 
     if (app.oldX == None) or (app.oldY == None):
-        drawPixels(app,imageX,imageY)
+        drawDot(app,imageX,imageY)
     else:
         imageOldX, imageOldY = insideImage(app,app.oldX,app.oldY)
         drawLine(app, imageOldX, imageOldY, imageX, imageY)
