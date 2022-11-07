@@ -18,7 +18,7 @@ def drawSideBar(app, canvas):
     fill = '#181818', outline = '#181818')
 
 
-class Button(object):
+class Button:
     # x and y refer to the top left corner
     # response passes in the function that is called when the button is 
     # pressed

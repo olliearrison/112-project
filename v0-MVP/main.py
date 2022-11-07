@@ -1,7 +1,8 @@
 from cmu_112_graphics import *
-from windows import *
+import windows
 from background import *
 from coors import *
+from brushClass import *
 import math
 
 """
@@ -48,7 +49,8 @@ def appStarted(app):
     app.scaleFactor = 1
     app.rotation = 0
     app.toBeDrawn = set()
-    app.timerDelay = 100
+    app.timerDelay = 50
+    app.drag = False
 
     # define primary image in RGBA (includes opacity 0-255)
     app.background1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
@@ -60,18 +62,9 @@ def appStarted(app):
     # scales image
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
-    app.originBrush = Image.open("brush.png").convert("RGBA")
-    app.originBrush = app.scaleImage(app.originBrush, 1/4)
-
-    app.brush = Image.open("brush.png").convert("RGBA")
-    app.brushColored = Image.open("brush.png").convert("RGBA")
-    app.brushColoredOpacity = Image.open("brush.png").convert("RGBA")
-
-    #app.brush = app.scaleImage(app.brush, 1/30)
-    app.brushWidth, app.brushHeight = app.brush.size
-
-    #app.brush.paste(app.brushL, app.brush)
-    #app.brush = app.brush.convert("RGBA")
+    brushImage = Image.open("brush.png").convert("RGBA")
+    app.airbrush = Brush(brushImage, (70, 10, 90), app.height/2 - 70, 255, 1, 
+                None, None, False)
 
     # holds the most recent x and y position on the canvas
     app.oldX = None
@@ -87,10 +80,10 @@ def appStarted(app):
     app.barCurrent = app.height/2 -70 - 50 + 35
 
 
-    app.sizeSlider = Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
+    app.sizeSlider = windows.Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
                     False, app.height/2 - 70)
 
-    app.opacitySlider = Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
+    app.opacitySlider = windows.Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
                     True, 285)
 
     app.opacitySlider.setAmount(255)
@@ -98,13 +91,14 @@ def appStarted(app):
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
-    setBrushOpacity(app, 255)
 
 
 def timerFired(app):
     for coor in app.toBeDrawn:
-        drawDot(app,coor[0],coor[1])
+        app.airbrush.addDot(coor[0],coor[1])
+        #app.airbrush.brushClick(coor[0],coor[1], app.image2, app)
     app.toBeDrawn = set()
+    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
 # retreives the buttons, scales them, and returns them in a tuple
 def getImage(name, app):
@@ -126,59 +120,59 @@ def createButtons(app):
 
     # opens tools
     toolImage = getImage("tool", app)
-    tool = Button(app, 10, 2*rowWidth, 15, saveImage, False, 
-    toolImage, "tool")
+    print(windows.Button)
+    tool = windows.Button(app, 10, 2*rowWidth, 15, saveImage, False, toolImage, "tool")
 
     # opens full layer adjustments
     wandImage = getImage("wand", app)
-    wand = Button(app, 10, 3*rowWidth, 15, response, False, 
+    wand = windows.Button(app, 10, 3*rowWidth, 15, response, False, 
     wandImage, "wand")
 
     # allows user to select parts of the layer they are on
     selectImage = getImage("select", app)
-    select = Button(app, 10, 4*rowWidth, 15, response, False, 
+    select = windows.Button(app, 10, 4*rowWidth, 15, response, False, 
     selectImage, "select")
 
     # allows the user to adjust the selection
     adjustImage = getImage("adjust", app)
-    adjust = Button(app, 10, 5*rowWidth, 15, response, False, 
+    adjust = windows.Button(app, 10, 5*rowWidth, 15, response, False, 
     adjustImage, "adjust")
 
     # either switches to the selected pen or opens a window to choose a pen
     penImage = getImage("pen", app)
-    pen = Button(app, 10, 15*rowWidth, 15, penMode, True, 
+    pen = windows.Button(app, 10, 15*rowWidth, 15, penMode, True, 
     penImage, "pen")
 
     # either switches to the selected blender or opens a window to choose a
     # blender
     blendImage = getImage("blend", app)
-    blend = Button(app, 10, 16*rowWidth, 15, response, False, 
+    blend = windows.Button(app, 10, 16*rowWidth, 15, response, False, 
     blendImage, "blend")
 
     # either switches to the selected eraser or opens a window to choose 
     # a eraser
     eraserImage = getImage("eraser", app)
-    eraser = Button(app, 10, 17*rowWidth, 15, eraserMode, False, 
+    eraser = windows.Button(app, 10, 17*rowWidth, 15, eraserMode, False, 
     eraserImage, "eraser")
 
     # opens layers
     layersImage = getImage("layers", app)
-    layers = Button(app, 10, 18*rowWidth, 15, response, False, 
+    layers = windows.Button(app, 10, 18*rowWidth, 15, response, False, 
     layersImage, "layers")
 
     # allows the user to select a color from the canvas
     selectorImage = getImage("selector", app)
-    selector = Button(app, 10, 15, app.height//2 - 25, colorSelectMode, False, 
+    selector = windows.Button(app, 10, 15, app.height//2 - 25, colorSelectMode, False, 
     selectorImage, "selector")
 
     # allows the user to go forward if they just went backward
     forwardImage = getImage("forward", app)
-    forward = Button(app, 10, 15, 10 + 7*app.height//9 - rowWidth//2, response, False, 
+    forward = windows.Button(app, 10, 15, 10 + 7*app.height//9 - rowWidth//2, response, False, 
     forwardImage, "forward")
 
     # allows the user to go backwards
     backwardImage = getImage("backward", app)
-    backward = Button(app, 10, 15, 20 + int(7*app.height//9 - rowWidth*1.25), 
+    backward = windows.Button(app, 10, 15, 20 + int(7*app.height//9 - rowWidth*1.25), 
     response, False, 
     backwardImage, "backward")
 
@@ -188,6 +182,7 @@ def createButtons(app):
     return result
 
 # saves an image with a white background and with a transparent background
+# why image2?
 def saveImage(app):
     flatImage = Image.alpha_composite(app.background1, app.image2)
     app.image2.save("result/clearImage.png","PNG")
@@ -227,11 +222,11 @@ def checkButtons(app, x, y):
 
 # filler response function
 def response(app):
-    setBrushColor(app, newR = 10, newG = 20, newB =255)
     print("response has been called")
 
 # when the mouse has been pressed
 def mousePressed(app, event):
+    app.drag = False
     (x, y) = event.x, event.y
 
     # check the buttons, and if they haven't been pressed
@@ -251,7 +246,7 @@ def mousePressed(app, event):
             else:
                 imageX, imageY = coors[0], coors[1]
                 # draw pixels based on that
-                drawDot(app,imageX,imageY)
+                app.airbrush.brushClick(imageX ,imageY, app.image1, app)
 
 # navigate options with keys
 def keyPressed(app, event):
@@ -293,21 +288,6 @@ def eraserMode(app):
     app.userMode = "eraser"
     print("eraser mode")
 
-# set the brush size to the amount
-def setBrushSize(app, amount):
-    final = (amount/20 + 1)/4
-    # adjust the brush
-    app.brush = app.scaleImage(app.originBrush, final)
-    # set new brush dimensions
-    app.brushWidth, app.brushHeight = app.brush.size
-    print(app.opacitySlider.amount)
-    # adjust the final image that is stamped for the brush to the correct 
-    # opacity
-    setBrushOpacity(app, app.opacitySlider.getPercent() * 255)
-
-# will set the brush color after the UI is worked out
-# will use same logic as setBrushOpacity
-
 def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
     altered = input.convert("RGBA")
     app.brush = Image.open("brush.png").convert("RGBA")
@@ -318,98 +298,26 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
     altered = Image.merge('RGBA', (r, g, b, a))
     return altered.convert("png")
 
-def setBrushColor(app, newR = 1,newG = 1,newB = 1):
-    
-    r,g,b,a = app.brush.split()
-
-    print(newR, newB, newG)
-    #newR /= 255
-    #newG /= 255
-    #newB /= 255
-
-    # sets each point on the brush to the correct value
-    r = r.point(lambda i: (i+1) * newR)
-    g = g.point(lambda i: (i + 1) * newG)
-    b = b.point(lambda i: (i+1) * newB)
-
-    # merges the values to create a final brush stamp
-    app.brushColored = Image.merge('RGBA', (r, g, b, a))
-
-# receives a value between 0 and 255
-def setBrushOpacity(app, aChange):
-    newR, newG, newB = app.currentColor
-    setBrushColor(app, newR, newG, newB)
-    r,g,b,a = app.brushColored.split()
-    newA = aChange/255
-
-    # sets each point on the brush to the correct alpha value
-    a = a.point(lambda i: i * newA)
-
-    # merges the values to create a final brush stamp
-    app.brushColoredOpacity = Image.merge('RGBA', (r, g, b, a))
-
-
 # when the mouse is released
 def mouseReleased(app, event):
     # reset the x and y mouse values
-    app.oldX = None
-    app.oldY = None
-
-# recursivly fills the points between the last two coordinates with dots
-# until they are spaced less than 10 pixels apart
-def recursiveMidpoint(app, x1, y1, x2, y2):
-    if (getDistance(x1, y1, x2, y2) < 10):
-        return None
-    newCoorX = (x1 + x2)//2
-    newCoorY = (y1 + y2)//2
-    tup = (newCoorX, newCoorY)
-    app.toBeDrawn.add(tup)
-    # add a point between half way and the second
-    recursiveMidpoint(app, newCoorX, newCoorY, x2, y2)
-    # add a point between the first and half way
-    recursiveMidpoint(app, x1, y1, newCoorX, newCoorY)
-
-# returns the distance between
-def getDistance(x1, y1, x2, y2):
-    return math.sqrt((x1-x2)**2 + (y1-y2)**2)
-
-# draws a line for the user
-def drawLine(app, x1, y1, x2, y2):
-    adjust = app.brushWidth // 2
-    app.image2.alpha_composite(app.brushColoredOpacity, dest = (x2 - adjust, y2 - adjust))
-    recursiveMidpoint(app, x1, y1, x2, y2)
-
-# draws a singular dot
-def drawDot(app,x,y):
-    adjust = app.brushWidth //2
-    app.image2.alpha_composite(app.brushColoredOpacity, dest = (x - adjust, y - adjust))
+    app.airbrush.afterBrushStroke(app, app.image1)
 
 # when the mouse is dragged
 def mouseDragged(app, event):
+    app.drag = True
     (x, y) = event.x, event.y
 
     # check if the opacity or slide slider has been clicked
     if (app.opacitySlider.checkClicked(x, y, app)):
-        setBrushOpacity(app, app.opacitySlider.dragSlider(app, event))
+        app.airbrush.opacity = app.opacitySlider.dragSlider(app, event)
     elif (app.sizeSlider.checkClicked(x, y, app)):
-        setBrushSize(app, app.sizeSlider.dragSlider(app,event))
+        app.airbrush.size = app.sizeSlider.dragSlider(app,event)
 
-    # find the value inside the image1
-    imageX, imageY = insideImage(app,x,y)
-
-    # if the user just pressed down the mouse
-    if (app.oldX == None) or (app.oldY == None):
-        # draw a dot
-        drawDot(app,imageX,imageY)
-    # otherwise
     else:
-        # draw a line
-        imageOldX, imageOldY = insideImage(app,app.oldX,app.oldY)
-        drawLine(app, imageOldX, imageOldY, imageX, imageY)
-
-    # set the new last point
-    app.oldX = x
-    app.oldY = y
+        # find the value inside the image1
+        imageX, imageY = insideImage(app,x,y)
+        app.airbrush.duringBrushStroke(app, imageX, imageY)
 
 # calculate the hex from RGBA with a white background
 def rgbaString(r, g, b, a=255):
@@ -428,13 +336,17 @@ def redrawAll(app, canvas):
     # display the white background
     centerX = app.width//2
     centerY = app.height//2
+    
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.background2))
 
     # display the user image
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
+    if (app.airbrush.active):
+        currentStroke = app.airbrush.getCurrentStroke()
+        canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
 
     # draw the windows
-    drawWindows(app, canvas)
+    windows.drawWindows(app, canvas)
 
     # draw the buttons
     drawButtons(app, canvas)
