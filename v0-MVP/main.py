@@ -8,22 +8,23 @@ import math
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 
 to do:
+- eraser functionality
+- color picker functionality
+- update color
 - make everything on the app scale when the window size is changed 
 (use similar strategy as for robot)
-- better code structure
 - fix zoom
-- add comments to everything
 
 to do later:
 - create brush class
 - create layer class
+- make layer naming consistant
 - add rotation (pillow)
 - non square/word based buttons (for gallery and on option pages)
-- comment code
-- organize code: no redundancies
 - create window to create and delete layers
+- create window to select colors
 
-must be after MVC:
+must be after MVP:
 - undo, redo
 - numpy
 - compile into c python
@@ -40,7 +41,9 @@ def appStarted(app):
     app.margin = 5
     app.imageWidth, app.imageHeight = 400, 450
     bgColor = (255, 255, 255)
-    app.currentBrush = (10, 20, 255, 255)
+
+    app.currentColor = (70, 10, 90)
+
     app.brushSize = 7
     app.scaleFactor = 1
     app.rotation = 0
@@ -62,13 +65,13 @@ def appStarted(app):
 
     app.brush = Image.open("brush.png").convert("RGBA")
     app.brushColored = Image.open("brush.png").convert("RGBA")
+    app.brushColoredOpacity = Image.open("brush.png").convert("RGBA")
 
     #app.brush = app.scaleImage(app.brush, 1/30)
     app.brushWidth, app.brushHeight = app.brush.size
 
     #app.brush.paste(app.brushL, app.brush)
     #app.brush = app.brush.convert("RGBA")
-
 
     # holds the most recent x and y position on the canvas
     app.oldX = None
@@ -95,6 +98,8 @@ def appStarted(app):
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
+    setBrushOpacity(app, 255)
+
 
 def timerFired(app):
     for coor in app.toBeDrawn:
@@ -141,7 +146,7 @@ def createButtons(app):
 
     # either switches to the selected pen or opens a window to choose a pen
     penImage = getImage("pen", app)
-    pen = Button(app, 10, 15*rowWidth, 15, penMode, False, 
+    pen = Button(app, 10, 15*rowWidth, 15, penMode, True, 
     penImage, "pen")
 
     # either switches to the selected blender or opens a window to choose a
@@ -221,7 +226,8 @@ def checkButtons(app, x, y):
     return False
 
 # filler response function
-def response():
+def response(app):
+    setBrushColor(app, newR = 10, newG = 20, newB =255)
     print("response has been called")
 
 # when the mouse has been pressed
@@ -237,7 +243,8 @@ def mousePressed(app, event):
             #app.image2.paste(app.brush, (x, y), app.brush)
             if (app.userMode == "colorselect"):
                 r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
-                app.currentBrush = (r,g,b,a)
+                #app.currentBrush = (r,g,b,a)
+                app.currentColor = (r,g,b)
                 app.opacitySlider.setAmount(a)
                 changeMode(app, "pen")
                 #app.selector.isActive = False
@@ -300,19 +307,46 @@ def setBrushSize(app, amount):
 
 # will set the brush color after the UI is worked out
 # will use same logic as setBrushOpacity
-def setBrushColor(app, r,b,g):
-    print("hi")
+
+def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
+    altered = input.convert("RGBA")
+    app.brush = Image.open("brush.png").convert("RGBA")
+    r,g,b,a = app.brush.split()
+    r = r.point(lambda i: (i+1) * newR)
+    g = g.point(lambda i: (i + 1) * newG)
+    b = b.point(lambda i: (i+1) * newB)
+    altered = Image.merge('RGBA', (r, g, b, a))
+    return altered.convert("png")
+
+def setBrushColor(app, newR = 1,newG = 1,newB = 1):
+    
+    r,g,b,a = app.brush.split()
+
+    print(newR, newB, newG)
+    #newR /= 255
+    #newG /= 255
+    #newB /= 255
+
+    # sets each point on the brush to the correct value
+    r = r.point(lambda i: (i+1) * newR)
+    g = g.point(lambda i: (i + 1) * newG)
+    b = b.point(lambda i: (i+1) * newB)
+
+    # merges the values to create a final brush stamp
+    app.brushColored = Image.merge('RGBA', (r, g, b, a))
 
 # receives a value between 0 and 255
 def setBrushOpacity(app, aChange):
-    r,g,b,a = app.brush.split()
+    newR, newG, newB = app.currentColor
+    setBrushColor(app, newR, newG, newB)
+    r,g,b,a = app.brushColored.split()
     newA = aChange/255
 
     # sets each point on the brush to the correct alpha value
     a = a.point(lambda i: i * newA)
 
     # merges the values to create a final brush stamp
-    app.brushColored = Image.merge('RGBA', (r, g, b, a))
+    app.brushColoredOpacity = Image.merge('RGBA', (r, g, b, a))
 
 
 # when the mouse is released
@@ -342,13 +376,13 @@ def getDistance(x1, y1, x2, y2):
 # draws a line for the user
 def drawLine(app, x1, y1, x2, y2):
     adjust = app.brushWidth // 2
-    app.image2.alpha_composite(app.brushColored, dest = (x2 - adjust, y2 - adjust))
+    app.image2.alpha_composite(app.brushColoredOpacity, dest = (x2 - adjust, y2 - adjust))
     recursiveMidpoint(app, x1, y1, x2, y2)
 
 # draws a singular dot
 def drawDot(app,x,y):
     adjust = app.brushWidth //2
-    app.image2.alpha_composite(app.brushColored, dest = (x - adjust, y - adjust))
+    app.image2.alpha_composite(app.brushColoredOpacity, dest = (x - adjust, y - adjust))
 
 # when the mouse is dragged
 def mouseDragged(app, event):
@@ -378,7 +412,7 @@ def mouseDragged(app, event):
     app.oldY = y
 
 # calculate the hex from RGBA with a white background
-def rgbaString(r, g, b, a):
+def rgbaString(r, g, b, a=255):
     a = a/255
     R,G,B = (255,255,255)
     # three lines adjusted from StackOverflow
@@ -410,8 +444,8 @@ def redrawAll(app, canvas):
     x = 19*rowWidth
     y = 18
     radius = 10
-    r,g,b,a = app.currentBrush
-    color = rgbaString(r, g, b, a)
+    r,g,b = app.currentColor
+    color = rgbaString(r, g, b)
     canvas.create_oval(x-radius, y-radius, x+radius, y+radius, 
     fill = color, outline = color)
 
