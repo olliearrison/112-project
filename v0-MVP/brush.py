@@ -92,12 +92,6 @@ class Brush:
 
         # sets each point on the brush to the correct alpha value
         a = a.point(lambda i: (i) * newA)
-        #r = r.point(lambda i: (i + 1) * 1)
-        #g = g.point(lambda i: (i + 1) * 1)
-        #b = b.point(lambda i: (i + 1) * 1)
-
-        # merges the values to create a final brush stamp
-        
         return Image.merge('RGBA', (r, g, b, a))
 
     def afterBrushStroke(self, app, layer):
@@ -109,4 +103,30 @@ class Brush:
         self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
         (255,255,255,0))
         
+class Eraser(Brush):
+    def createResultingBrush(self, app, newColor, newSize):
+        self.size = newSize
+        adjustedSize = (self.size/20 + 1)/4
+        # adjust the brush
+        self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
 
+        self.color = newColor
+        newR, newG, newB = self.color[0],self.color[1],self.color[2]#,self.color[3]
+        r,g,b,a = self.resultingBrush.split()
+
+
+        newA = self.pressureOpacity/255
+        # sets each point on the brush to the correct value
+        r = r.point(lambda i: (i + 1) * newR)
+        g = g.point(lambda i: (i + 1) * newG)
+        b = b.point(lambda i: (i + 1) * newB)
+        a = a.point(lambda i: (i * newA))
+
+        # merges the values to create a final brush stamp
+        self.resultingBrush = Image.merge('RGBA', (r, g, b, a))
+
+    def addDot(self, x, y):
+        brushWidth, brushHeight = self.resultingBrush.size
+        adjust = brushWidth //2
+        self.currentStroke.paste(self.resultingBrush,(x - adjust, y - adjust),self.resultingBrush)
+        #self.currentStroke.composite(self.resultingBrush, dest = (x - adjust, y - adjust))

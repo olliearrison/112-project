@@ -10,18 +10,24 @@ import math
 """
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 
-questions:
-- my guess is that the problem is registering both pressed and dragged, if
-that's the problem, what could I do to fix it, I've already tried several 
-solutions
-- how to solve brush stroke started problem
-- would a subclass be the right strategy to address the eraser?
-- 
+- eraser (wait until mvp?)
+- problem is back again?
+- masks
+- cache images
 
+def composite(image1, image2, mask):
+
+    Create composite image by blending images using a transparency mask.
+
+    :param image1: The first image.
+    :param image2: The second image.  Must have the same mode and
+       size as the first image.
+    :param mask: A mask image.  This image can have mode
+       "1", "L", or "RGBA", and must have the same size as the
+       other two images.
+    
 
 - eraser functionality
-- color picker functionality
-- update color
 - make everything on the app scale when the window size is changed 
 (use similar strategy as for robot)
 
@@ -49,7 +55,9 @@ def appStarted(app):
     app.imageWidth, app.imageHeight = 400, 450
     bgColor = (255, 255, 255)
 
-    app.currentColor = (70, 10, 90)
+    app.color = (70, 10, 90)
+    app.eraser = (255,255,255)
+    app.currentColor = app.color
 
     app.brushSize = 7
     app.scaleFactor = 1
@@ -69,7 +77,7 @@ def appStarted(app):
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
     brushImage = Image.open("airbrush.png").convert("RGBA")
-    app.airbrush = Brush(brushImage, (70, 10, 90), app.height/2 - 70, 255, 80, 
+    app.airbrush = Brush(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
                 None, None, False)
 
     # holds the most recent x and y position on the canvas
@@ -103,10 +111,10 @@ def appStarted(app):
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
 
 
+
 def timerFired(app):
     for coor in app.toBeDrawn:
         app.airbrush.addDot(coor[0],coor[1])
-        #app.airbrush.brushClick(coor[0],coor[1], app.image2, app)
     app.toBeDrawn = set()
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
@@ -234,31 +242,6 @@ def checkButtons(app, x, y):
 def response(app):
     print("response has been called")
 
-# when the mouse has been pressed
-"""
-def mousePressed(app, event):
-    app.drag = False
-    (x, y) = event.x, event.y
-
-    # check the buttons, and if they haven't been pressed
-    if not(checkButtons(app, x, y)):
-        # get the coordinates within the image
-        coors = insideImage(app,x,y)
-        # if the coordinates are in the image
-        if (coors != None):
-            #app.image2.paste(app.brush, (x, y), app.brush)
-            if (app.userMode == "colorselect"):
-                r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
-                #app.currentBrush = (r,g,b,a)
-                app.currentColor = (r,g,b)
-                app.opacitySlider.setAmount(a)
-                changeMode(app, "pen")
-                #app.selector.isActive = False
-            else:
-                imageX, imageY = coors[0], coors[1]
-                # draw pixels based on that
-                app.airbrush.brushClick(imageX ,imageY, app.image1, app)
-"""
 # navigate options with keys
 def keyPressed(app, event):
     if event.key == "w":
@@ -292,11 +275,17 @@ def colorSelectMode(app):
 # change to penMode
 def penMode(app):
     app.userMode = "pen"
+    app.currentColor = app.color
+    #app.airbrush.color = app.currentColor
+    app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
     print("pen mode")
 
 # change to eraserMode
 def eraserMode(app):
     app.userMode = "eraser"
+    app.currentColor = app.eraser
+    #app.airbrush.color = app.currentColor
+    app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
     print("eraser mode")
 
 def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
@@ -331,6 +320,8 @@ def mouseReleased(app, event):
                     #app.currentBrush = (r,g,b,a)
                     app.currentColor = (r,g,b)
                     app.opacitySlider.setAmount(a)
+                    app.airbrush.opacity = a
+                    app.airbrush.color = app.currentColor
                     changeMode(app, "pen")
                     #app.selector.isActive = False
                 else:
