@@ -21,31 +21,30 @@ class Brush:
         self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
 
         self.color = newColor
-        newR, newG, newB = self.color[0],self.color[1],self.color[2]
+        newR, newG, newB = self.color[0],self.color[1],self.color[2]#,self.color[3]
         r,g,b,a = self.resultingBrush.split()
 
 
-        #newA = ((self.opacity/255)//2)+(255//2)
+        newA = self.pressureOpacity/255
         # sets each point on the brush to the correct value
         r = r.point(lambda i: (i + 1) * newR)
         g = g.point(lambda i: (i + 1) * newG)
         b = b.point(lambda i: (i + 1) * newB)
-        #a = a.point(lambda i: (i) * newA)
+        a = a.point(lambda i: (i) * newA)
 
         # merges the values to create a final brush stamp
         self.resultingBrush = Image.merge('RGBA', (r, g, b, a))
 
     def startBrushStroke(self, app):
-        self.resultingBrush = self.createResultingBrush(app, self.color, self.size)
         self.active = True
         self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
         (255,255,255,0))
-        self.createResultingBrush(app, self.color, self.size)
 
     def brushClick(self,x ,y, layer, app):
-        self.startBrushStroke(app)
-        self.addDot(x, y)
-        self.afterBrushStroke(app, layer)
+        if not(self.active):
+            self.startBrushStroke(app)
+            self.addDot(x, y)
+            self.afterBrushStroke(app, layer)
 
     def addDot(self, x, y):
         brushWidth, brushHeight = self.resultingBrush.size
@@ -59,8 +58,7 @@ class Brush:
         # if the user just pressed down the mouse
         if (app.oldX == None) or (app.oldY == None):
         # draw a dot
-            print("?")
-            #self.addDot(x, y)
+            self.addDot(x, y)
         # otherwise
         else:
         # draw a line
@@ -93,7 +91,7 @@ class Brush:
         newA = aChange/255
 
         # sets each point on the brush to the correct alpha value
-        a = a.point(lambda i: (i+1) * newA)
+        a = a.point(lambda i: (i) * newA)
         #r = r.point(lambda i: (i + 1) * 1)
         #g = g.point(lambda i: (i + 1) * 1)
         #b = b.point(lambda i: (i + 1) * 1)
@@ -108,5 +106,7 @@ class Brush:
 
         app.image1 = Image.alpha_composite(app.image1, self.getCurrentStroke())
         self.active = False
+        self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+        (255,255,255,0))
         
 

@@ -2,19 +2,26 @@ from cmu_112_graphics import *
 import windows
 from background import *
 from coors import *
-from brushClass import *
+from brush import *
 import math
 
 """
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 
-to do:
+questions:
+- my guess is that the problem is registering both pressed and dragged, if
+that's the problem, what could I do to fix it, I've already tried several 
+solutions
+- how to solve brush stroke started problem
+- would a subclass be the right strategy to address the eraser?
+- 
+
+
 - eraser functionality
 - color picker functionality
 - update color
 - make everything on the app scale when the window size is changed 
 (use similar strategy as for robot)
-- fix zoom
 
 to do later:
 - create brush class
@@ -33,9 +40,6 @@ must be after MVP:
 - threading: multi threading
 - pygame maybe
 
-plan to fix opacity:
-when brush is first clicked, start a new image that is multiplied by the
-opacity. after the brush is picked up, flatten this image into the layer
 """
 
 def appStarted(app):
@@ -62,8 +66,8 @@ def appStarted(app):
     # scales image
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
-    brushImage = Image.open("brush.png").convert("RGBA")
-    app.airbrush = Brush(brushImage, (70, 10, 90), app.height/2 - 70, 255, 1, 
+    brushImage = Image.open("airbrush.png").convert("RGBA")
+    app.airbrush = Brush(brushImage, (70, 10, 90), app.height/2 - 70, 255, 80, 
                 None, None, False)
 
     # holds the most recent x and y position on the canvas
@@ -86,8 +90,12 @@ def appStarted(app):
     app.opacitySlider = windows.Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
                     True, 285)
 
-    app.opacitySlider.setAmount(255)
-    app.sizeSlider.setAmount(app.height/2 - 70)
+    initSize = 60
+    initOpacity = 200
+    app.opacitySlider.setAmount(initOpacity)
+    app.sizeSlider.setAmount(initSize)
+    app.airbrush.opacity = initOpacity
+    app.airbrush.createResultingBrush(app, app.currentColor, initSize)
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
@@ -290,7 +298,7 @@ def eraserMode(app):
 
 def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
     altered = input.convert("RGBA")
-    app.brush = Image.open("brush.png").convert("RGBA")
+    app.brush = Image.open("airbrush.png").convert("RGBA")
     r,g,b,a = app.brush.split()
     r = r.point(lambda i: (i+1) * newR)
     g = g.point(lambda i: (i + 1) * newG)
@@ -302,6 +310,7 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
 def mouseReleased(app, event):
     # reset the x and y mouse values
     app.airbrush.afterBrushStroke(app, app.image1)
+    app.drag = False
 
 # when the mouse is dragged
 def mouseDragged(app, event):
@@ -313,6 +322,7 @@ def mouseDragged(app, event):
         app.airbrush.opacity = app.opacitySlider.dragSlider(app, event)
     elif (app.sizeSlider.checkClicked(x, y, app)):
         app.airbrush.size = app.sizeSlider.dragSlider(app,event)
+        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
 
     else:
         # find the value inside the image1
@@ -343,7 +353,9 @@ def redrawAll(app, canvas):
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
     if (app.airbrush.active):
         currentStroke = app.airbrush.getCurrentStroke()
+        currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
         canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
+        
 
     # draw the windows
     windows.drawWindows(app, canvas)
