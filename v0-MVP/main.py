@@ -1,5 +1,7 @@
 from cmu_112_graphics import *
 import windows
+import slider
+import button
 from background import *
 from coors import *
 from brush import *
@@ -233,6 +235,7 @@ def response(app):
     print("response has been called")
 
 # when the mouse has been pressed
+"""
 def mousePressed(app, event):
     app.drag = False
     (x, y) = event.x, event.y
@@ -255,7 +258,7 @@ def mousePressed(app, event):
                 imageX, imageY = coors[0], coors[1]
                 # draw pixels based on that
                 app.airbrush.brushClick(imageX ,imageY, app.image1, app)
-
+"""
 # navigate options with keys
 def keyPressed(app, event):
     if event.key == "w":
@@ -309,8 +312,31 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
 # when the mouse is released
 def mouseReleased(app, event):
     # reset the x and y mouse values
-    app.airbrush.afterBrushStroke(app, app.image1)
-    app.drag = False
+    if (app.drag):
+        app.airbrush.afterBrushStroke(app, app.image1)
+        app.drag = False
+    else:
+        app.drag = False
+        (x, y) = event.x, event.y
+
+        # check the buttons, and if they haven't been pressed
+        if not(checkButtons(app, x, y)):
+            # get the coordinates within the image
+            coors = insideImage(app,x,y)
+            # if the coordinates are in the image
+            if (coors != None):
+                #app.image2.paste(app.brush, (x, y), app.brush)
+                if (app.userMode == "colorselect"):
+                    r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
+                    #app.currentBrush = (r,g,b,a)
+                    app.currentColor = (r,g,b)
+                    app.opacitySlider.setAmount(a)
+                    changeMode(app, "pen")
+                    #app.selector.isActive = False
+                else:
+                    imageX, imageY = coors[0], coors[1]
+                    # draw pixels based on that
+                    app.airbrush.brushClick(imageX ,imageY, app.image1, app)
 
 # when the mouse is dragged
 def mouseDragged(app, event):
