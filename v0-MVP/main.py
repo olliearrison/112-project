@@ -10,9 +10,9 @@ import math
 """
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 
-- eraser (wait until mvp?)
 - problem is back again?
-- masks
+- test out layer mask (maybe create a test subclass to handle new brush
+ideas)
 - cache images
 
 def composite(image1, image2, mask):
@@ -32,7 +32,6 @@ def composite(image1, image2, mask):
 (use similar strategy as for robot)
 
 to do later:
-- create brush class
 - create layer class
 - make layer naming consistant
 - add rotation (pillow)
@@ -331,7 +330,6 @@ def mouseReleased(app, event):
 
 # when the mouse is dragged
 def mouseDragged(app, event):
-    app.drag = True
     (x, y) = event.x, event.y
 
     # check if the opacity or slide slider has been clicked
@@ -342,6 +340,7 @@ def mouseDragged(app, event):
         app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
 
     else:
+        app.drag = True
         # find the value inside the image1
         imageX, imageY = insideImage(app,x,y)
         app.airbrush.duringBrushStroke(app, imageX, imageY)

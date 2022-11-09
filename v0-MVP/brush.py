@@ -16,7 +16,7 @@ class Brush:
 
     def createResultingBrush(self, app, newColor, newSize):
         self.size = newSize
-        adjustedSize = (self.size/20 + 1)/4
+        adjustedSize = (self.size/20 + 1)/10
         # adjust the brush
         self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
 
