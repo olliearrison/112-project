@@ -1,7 +1,7 @@
 from cmu_112_graphics import *
 import windows
-import slider
 import button
+import slider
 from background import *
 from coors import *
 from brush import *
@@ -99,10 +99,10 @@ def appStarted(app):
     app.barCurrent = app.height/2 -70 - 50 + 35
 
 
-    app.sizeSlider = windows.Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
+    app.sizeSlider = slider.Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
                     False, app.height/2 - 70)
 
-    app.opacitySlider = windows.Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
+    app.opacitySlider = slider.Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
                     True, 285)
 
     initSize = 60
@@ -152,63 +152,62 @@ def createButtons(app):
 
     # opens tools
     toolImage = getImage("tool", app)
-    print(windows.Button)
-    tool = windows.Button(app, 10, 2*rowWidth, 15, saveImage, False, toolImage, "tool")
+    tool = button.Button(app, 10, 2*rowWidth, 15, saveImage, False, toolImage, "tool")
 
     # opens full layer adjustments
     wandImage = getImage("wand", app)
-    wand = windows.Button(app, 10, 3*rowWidth, 15, response, False, 
+    wand = button.Button(app, 10, 3*rowWidth, 15, response, False, 
     wandImage, "wand")
 
     # allows user to select parts of the layer they are on
     selectImage = getImage("select", app)
-    select = windows.Button(app, 10, 4*rowWidth, 15, response, False, 
+    select = button.Button(app, 10, 4*rowWidth, 15, response, False, 
     selectImage, "select")
 
     # allows the user to adjust the selection
     adjustImage = getImage("adjust", app)
-    adjust = windows.Button(app, 10, 5*rowWidth, 15, response, False, 
+    adjust = button.Button(app, 10, 5*rowWidth, 15, response, False, 
     adjustImage, "adjust")
 
     # either switches to the selected pen or opens a window to choose a pen
     penImage = getImage("pen", app)
-    pen = windows.Button(app, 10, 15*rowWidth, 15, penMode, True, 
+    pen = button.Button(app, 10, 15*rowWidth, 15, penMode, True, 
     penImage, "pen")
 
     # either switches to the selected blender or opens a window to choose a
     # blender
     blendImage = getImage("blend", app)
-    blend = windows.Button(app, 10, 16*rowWidth, 15, response, False, 
+    blend = button.Button(app, 10, 16*rowWidth, 15, response, False, 
     blendImage, "blend")
 
     # either switches to the selected eraser or opens a window to choose 
     # a eraser
     eraserImage = getImage("eraser", app)
-    eraser = windows.Button(app, 10, 17*rowWidth, 15, eraserMode, False, 
+    eraser = button.Button(app, 10, 17*rowWidth, 15, eraserMode, False, 
     eraserImage, "eraser")
 
     # opens layers
     layersImage = getImage("layers", app)
-    layers = windows.Button(app, 10, 18*rowWidth, 15, response, False, 
+    layers = button.Button(app, 10, 18*rowWidth, 15, response, False, 
     layersImage, "layers")
 
     colorImage = getImage("blank", app)
-    color = windows.Button(app, 10, 19*rowWidth, 15, toggleWindow, False, 
+    color = button.Button(app, 10, 19*rowWidth, 15, toggleWindow, False, 
     colorImage, "color")
 
     # allows the user to select a color from the canvas
     selectorImage = getImage("selector", app)
-    selector = windows.Button(app, 10, 15, app.height//2 - 25, colorSelectMode, False, 
+    selector = button.Button(app, 10, 15, app.height//2 - 25, colorSelectMode, False, 
     selectorImage, "selector")
 
     # allows the user to go forward if they just went backward
     forwardImage = getImage("forward", app)
-    forward = windows.Button(app, 10, 15, 10 + 7*app.height//9 - rowWidth//2, response, False, 
+    forward = button.Button(app, 10, 15, 10 + 7*app.height//9 - rowWidth//2, response, False, 
     forwardImage, "forward")
 
     # allows the user to go backwards
     backwardImage = getImage("backward", app)
-    backward = windows.Button(app, 10, 15, 20 + int(7*app.height//9 - rowWidth*1.25), 
+    backward = button.Button(app, 10, 15, 20 + int(7*app.height//9 - rowWidth*1.25), 
     response, False, 
     backwardImage, "backward")
 
