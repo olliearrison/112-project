@@ -2,9 +2,9 @@ from cmu_112_graphics import *
 import windows
 import button
 import slider
+import brush
 from background import *
 from coors import *
-from brush import *
 from colorselector import *
 import math
 
@@ -82,7 +82,7 @@ def appStarted(app):
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
     brushImage = Image.open("airbrush.png").convert("RGBA")
-    app.airbrush = Brush(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
+    app.airbrush = brush.Brush(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
                 None, None, False)
 
     # holds the most recent x and y position on the canvas
@@ -117,7 +117,7 @@ def appStarted(app):
 
     app.testing = False
     if app.testing:
-        app.testBrush = Testing(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
+        app.testBrush = brush.Testing(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
                 None, None, False)
         app.testBrush.opacity = initOpacity
         app.testBrush.createResultingBrush(app, app.currentColor, initSize)
