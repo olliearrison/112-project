@@ -352,6 +352,7 @@ def mouseReleased(app, event):
                     app.airbrush.opacity = a
                     app.airbrush.color = app.currentColor
                     changeMode(app, "pen")
+                    app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
                     #app.selector.isActive = False
                 else:
                 
