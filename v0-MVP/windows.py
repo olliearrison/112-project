@@ -42,9 +42,9 @@ class Button:
 
     # check if it has been clicked
     def checkClicked(self,x,y,app):
-        x1 = self.x
+        x1 = self.x - self.size
         x2 = self.x + self.size
-        y1 = self.y
+        y1 = self.y - self.size
         y2 = self.y + self.size
 
         # if it has

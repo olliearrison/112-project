@@ -5,6 +5,7 @@ import button
 from background import *
 from coors import *
 from brush import *
+from colorselector import *
 import math
 
 """
@@ -32,6 +33,8 @@ def composite(image1, image2, mask):
 (use similar strategy as for robot)
 
 to do later:
+- make pixel distance reletive to size of brush (smaller brushes don't look 
+good @ 10 pixels)
 - create layer class
 - make layer naming consistant
 - add rotation (pillow)
@@ -57,6 +60,7 @@ def appStarted(app):
     app.color = (70, 10, 90)
     app.eraser = (255,255,255)
     app.currentColor = app.color
+    app.colorWindow = False
 
     app.brushSize = 7
     app.scaleFactor = 1
@@ -64,6 +68,8 @@ def appStarted(app):
     app.toBeDrawn = set()
     app.timerDelay = 50
     app.drag = False
+
+    loadColorSelect(app)
 
     # define primary image in RGBA (includes opacity 0-255)
     app.background1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
@@ -109,11 +115,20 @@ def appStarted(app):
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
 
+    app.testing = False
+    if app.testing:
+        app.testBrush = Testing(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
+                None, None, False)
+        app.testBrush.opacity = initOpacity
+        app.testBrush.createResultingBrush(app, app.currentColor, initSize)
 
 
 def timerFired(app):
     for coor in app.toBeDrawn:
-        app.airbrush.addDot(coor[0],coor[1])
+        if app.testing:
+            app.testBrush.addDot(coor[0], coor[1])
+        else:
+            app.airbrush.addDot(coor[0],coor[1])
     app.toBeDrawn = set()
     app.image2 = app.scaleImage(app.image1, app.scaleFactor)
 
@@ -177,6 +192,10 @@ def createButtons(app):
     layers = windows.Button(app, 10, 18*rowWidth, 15, response, False, 
     layersImage, "layers")
 
+    colorImage = getImage("blank", app)
+    color = windows.Button(app, 10, 19*rowWidth, 15, toggleWindow, False, 
+    colorImage, "color")
+
     # allows the user to select a color from the canvas
     selectorImage = getImage("selector", app)
     selector = windows.Button(app, 10, 15, app.height//2 - 25, colorSelectMode, False, 
@@ -194,9 +213,13 @@ def createButtons(app):
     backwardImage, "backward")
 
     # adds each of the buttons and returns them
-    result.extend([tool, wand, select, adjust, pen, blend, eraser, layers,
+    result.extend([tool, wand, select, adjust, pen, blend, eraser, layers, color,
                 selector, forward, backward])
     return result
+
+def toggleWindow(app):
+    print("hi")
+    app.colorWindow = not(app.colorWindow)
 
 # saves an image with a white background and with a transparent background
 # why image2?
@@ -262,9 +285,9 @@ def keyPressed(app, event):
         # scale the results background (but not the actual image)
         app.background2 = app.scaleImage(app.background1, app.scaleFactor)
     elif event.key == "a":
-        print("rotate counterclockwise")
+        adjustBlack(app, 10)
     elif event.key == "d":
-        print("rotate clockwise")
+        adjustBlack(app, -10)
 
 # select a color
 def colorSelectMode(app):
@@ -297,8 +320,14 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
     altered = Image.merge('RGBA', (r, g, b, a))
     return altered.convert("png")
 
+def mousePressed(app, event):
+    if (app.colorWindow and inCircle(app, event.x, event.y)[0] != None):
+        getColor(app, event)
+        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+
 # when the mouse is released
 def mouseReleased(app, event):
+    
     # reset the x and y mouse values
     if (app.drag):
         app.airbrush.afterBrushStroke(app, app.image1)
@@ -315,6 +344,8 @@ def mouseReleased(app, event):
             if (coors != None):
                 #app.image2.paste(app.brush, (x, y), app.brush)
                 if (app.userMode == "colorselect"):
+
+                    
                     r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
                     #app.currentBrush = (r,g,b,a)
                     app.currentColor = (r,g,b)
@@ -324,9 +355,16 @@ def mouseReleased(app, event):
                     changeMode(app, "pen")
                     #app.selector.isActive = False
                 else:
-                    imageX, imageY = coors[0], coors[1]
-                    # draw pixels based on that
-                    app.airbrush.brushClick(imageX ,imageY, app.image1, app)
+                
+                    if app.testing:
+
+                        imageX, imageY = coors[0], coors[1]
+                        # draw pixels based on that
+                        app.testBrush.brushClick(imageX ,imageY, app.image1, app)
+                    else:
+                        imageX, imageY = coors[0], coors[1]
+                        # draw pixels based on that
+                        app.airbrush.brushClick(imageX ,imageY, app.image1, app)
 
 # when the mouse is dragged
 def mouseDragged(app, event):
@@ -365,13 +403,15 @@ def redrawAll(app, canvas):
     
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.background2))
 
+    
     # display the user image
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
+
     if (app.airbrush.active):
         currentStroke = app.airbrush.getCurrentStroke()
         currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
         canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
-        
+
 
     # draw the windows
     windows.drawWindows(app, canvas)
@@ -392,6 +432,8 @@ def redrawAll(app, canvas):
     # draw the sliders
     app.opacitySlider.drawSlider(app, canvas)
     app.sizeSlider.drawSlider(app, canvas)
+    if app.colorWindow:
+        drawColorSelectBackground(app, canvas)
 
 
 runApp(width=800, height=550)

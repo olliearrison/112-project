@@ -74,7 +74,7 @@ class Brush:
     # recursivly fills the points between the last two coordinates with dots
     # until they are spaced less than 10 pixels apart
     def recursiveMidpoint(self, app, x1, y1, x2, y2):
-        if (getDistance(x1, y1, x2, y2) < 10):
+        if (getDistance(x1, y1, x2, y2) < 5):
             return None
         newCoorX = (x1 + x2)//2
         newCoorY = (y1 + y2)//2
@@ -99,14 +99,16 @@ class Brush:
         app.oldY = None
 
         app.image1 = Image.alpha_composite(app.image1, self.getCurrentStroke())
-        self.active = False
-        self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+        self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight),
         (255,255,255,0))
+
+        self.active = False
         
-class Eraser(Brush):
+class Testing(Brush):
     def createResultingBrush(self, app, newColor, newSize):
         self.size = newSize
         adjustedSize = (self.size/20 + 1)/4
+        newColor = (40,80,100)
         # adjust the brush
         self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
 
@@ -127,6 +129,6 @@ class Eraser(Brush):
 
     def addDot(self, x, y):
         brushWidth, brushHeight = self.resultingBrush.size
-        adjust = brushWidth //2
-        self.currentStroke.paste(self.resultingBrush,(x - adjust, y - adjust),self.resultingBrush)
-        #self.currentStroke.composite(self.resultingBrush, dest = (x - adjust, y - adjust))
+        adjust = brushWidth // 2
+        #self.currentStroke.paste(self.resultingBrush,(x - adjust, y - adjust),self.resultingBrush)
+        self.currentStroke.composite(self.resultingBrush, dest = (x - adjust, y - adjust))
