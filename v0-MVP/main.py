@@ -31,8 +31,6 @@ def composite(image1, image2, mask):
 - eraser functionality
 - make everything on the app scale when the window size is changed 
 (use similar strategy as for robot)
-
-to do later:
 - make pixel distance reletive to size of brush (smaller brushes don't look 
 good @ 10 pixels)
 - create layer class
@@ -40,7 +38,6 @@ good @ 10 pixels)
 - add rotation (pillow)
 - non square/word based buttons (for gallery and on option pages)
 - create window to create and delete layers
-- create window to select colors
 
 must be after MVP:
 - undo, redo

@@ -13,12 +13,13 @@ def inCircle(app, x, y):
     y2 = app.height//5*3
 
     centerX = (x1 + x2)//2
-    centerY = (y1 + y2)//2 - app.height//15 * 1.5
+    centerY = (y1 + y2)//2 #+ app.height//15 * 1.5
 
     r = 94
     if getDistance(centerX, centerY, x, y) <= r:
+        print("inside")
         adjustedX = x - centerX + r
-        adjustedY = y - centerY + r//2
+        adjustedY = y - centerY + r
         return (adjustedX, adjustedY)
     else:
         return (None, None)
