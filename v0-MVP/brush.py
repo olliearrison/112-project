@@ -107,12 +107,11 @@ class Brush:
 class Testing(Brush):
     def createResultingBrush(self, app, newColor, newSize):
         self.size = newSize
-        adjustedSize = (self.size/20 + 1)/4
-        newColor = (40,80,100)
+        adjustedSize = (self.size/20 + 1)/10
         # adjust the brush
         self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
 
-        self.color = newColor
+        self.color = (30,30,30)
         newR, newG, newB = self.color[0],self.color[1],self.color[2]#,self.color[3]
         r,g,b,a = self.resultingBrush.split()
 
@@ -122,13 +121,7 @@ class Testing(Brush):
         r = r.point(lambda i: (i + 1) * newR)
         g = g.point(lambda i: (i + 1) * newG)
         b = b.point(lambda i: (i + 1) * newB)
-        a = a.point(lambda i: (i * newA))
+        a = a.point(lambda i: (i) * newA)
 
         # merges the values to create a final brush stamp
         self.resultingBrush = Image.merge('RGBA', (r, g, b, a))
-
-    def addDot(self, x, y):
-        brushWidth, brushHeight = self.resultingBrush.size
-        adjust = brushWidth // 2
-        #self.currentStroke.paste(self.resultingBrush,(x - adjust, y - adjust),self.resultingBrush)
-        self.currentStroke.composite(self.resultingBrush, dest = (x - adjust, y - adjust))

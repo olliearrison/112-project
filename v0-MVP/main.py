@@ -295,15 +295,21 @@ def penMode(app):
     app.userMode = "pen"
     app.currentColor = app.color
     #app.airbrush.color = app.currentColor
-    app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-    print("pen mode")
+    if app.testing:
+        app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        print("pen mode")
+    else:
+        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
 
 # change to eraserMode
 def eraserMode(app):
     app.userMode = "eraser"
     app.currentColor = app.eraser
     #app.airbrush.color = app.currentColor
-    app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+    if app.testing:
+        app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+    else:
+        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
     print("eraser mode")
 
 def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
@@ -319,14 +325,21 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
 def mousePressed(app, event):
     if (app.colorWindow and inCircle(app, event.x, event.y)[0] != None):
         getColor(app, event)
-        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        
+        if app.testing:
+            app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        else:
+            app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
 
 # when the mouse is released
 def mouseReleased(app, event):
     
     # reset the x and y mouse values
     if (app.drag):
-        app.airbrush.afterBrushStroke(app, app.image1)
+        if app.testing:
+            app.testBrush.afterBrushStroke(app, app.image1)
+        else:
+            app.airbrush.afterBrushStroke(app, app.image1)
         app.drag = False
     else:
         app.drag = False
@@ -349,7 +362,10 @@ def mouseReleased(app, event):
                     app.airbrush.opacity = a
                     app.airbrush.color = app.currentColor
                     changeMode(app, "pen")
-                    app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+                    if app.testing:
+                        app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+                    else:
+                        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
                     #app.selector.isActive = False
                 else:
                 
@@ -366,19 +382,30 @@ def mouseReleased(app, event):
 # when the mouse is dragged
 def mouseDragged(app, event):
     (x, y) = event.x, event.y
+    app.colorWindow = False
 
     # check if the opacity or slide slider has been clicked
     if (app.opacitySlider.checkClicked(x, y, app)):
-        app.airbrush.opacity = app.opacitySlider.dragSlider(app, event)
+        if app.testing:
+            app.testBrush.opacity = app.opacitySlider.dragSlider(app, event)
+        else:
+            app.airbrush.opacity = app.opacitySlider.dragSlider(app, event)
     elif (app.sizeSlider.checkClicked(x, y, app)):
-        app.airbrush.size = app.sizeSlider.dragSlider(app,event)
-        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        if app.testing:
+            app.testBrush.size = app.sizeSlider.dragSlider(app,event)
+            app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        else:
+            app.airbrush.size = app.sizeSlider.dragSlider(app,event)
+            app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
 
     else:
         app.drag = True
         # find the value inside the image1
         imageX, imageY = insideImage(app,x,y)
-        app.airbrush.duringBrushStroke(app, imageX, imageY)
+        if app.testing:
+            app.testBrush.duringBrushStroke(app, imageX, imageY)
+        else:
+            app.airbrush.duringBrushStroke(app, imageX, imageY)
 
 # calculate the hex from RGBA with a white background
 def rgbaString(r, g, b, a=255):
@@ -405,9 +432,14 @@ def redrawAll(app, canvas):
     canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
 
     if (app.airbrush.active):
-        currentStroke = app.airbrush.getCurrentStroke()
-        currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
-        canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
+        if app.testing:
+            currentStroke = app.testBrush.getCurrentStroke()
+            currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
+            canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
+        else:
+            currentStroke = app.airbrush.getCurrentStroke()
+            currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
+            canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
 
 
     # draw the windows
