@@ -3,6 +3,7 @@ import windows
 import button
 import slider
 import brush
+import layer
 from background import *
 from coors import *
 from colorselector import *
@@ -73,10 +74,20 @@ def appStarted(app):
     (255,255,255,255))
     app.background2 = app.scaleImage(app.background1, app.scaleFactor)
 
-    app.image1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+    # layer (old)
+    #app.image1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+    #(255,255,255,0))
+
+    # new layer
+    paintImage = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
     (255,255,255,0))
-    # scales image
-    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+    app.paintLayer = layer.Layer(paintImage, 1, "normal", 1, True, None, None)
+
+    # scales image (old)
+    #, app.scaleFactor)
+    
+    # new scale
+    app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
 
     brushImage = Image.open("airbrush.png").convert("RGBA")
     app.airbrush = brush.Brush(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
@@ -127,7 +138,8 @@ def timerFired(app):
         else:
             app.airbrush.addDot(coor[0],coor[1])
     app.toBeDrawn = set()
-    app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+    #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+    app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
 
 # retreives the buttons, scales them, and returns them in a tuple
 def getImage(name, app):
@@ -220,8 +232,8 @@ def toggleWindow(app):
 # saves an image with a white background and with a transparent background
 # why image2?
 def saveImage(app):
-    flatImage = Image.alpha_composite(app.background1, app.image2)
-    app.image2.save("result/clearImage.png","PNG")
+    flatImage = Image.alpha_composite(app.background1, app.paintLayer.image)
+    app.paintLayer.image.save("result/clearImage.png","PNG")
     flatImage.save("result/flatImage.png","PNG")
     print("Image saved inside of result folder")
 
@@ -268,7 +280,8 @@ def keyPressed(app, event):
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor + .1, 1)
         # scale the results image (but not the actual image)
-        app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+        #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+        app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
         app.background2 = app.scaleImage(app.background1, app.scaleFactor)
     elif event.key == "s":
@@ -277,7 +290,8 @@ def keyPressed(app, event):
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor - .1, 1)
         # scale the results image (but not the actual image)
-        app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+        #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
+        app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
         app.background2 = app.scaleImage(app.background1, app.scaleFactor)
     elif event.key == "a":
@@ -337,9 +351,9 @@ def mouseReleased(app, event):
     # reset the x and y mouse values
     if (app.drag):
         if app.testing:
-            app.testBrush.afterBrushStroke(app, app.image1)
+            app.testBrush.afterBrushStroke(app, app.paintLayer)
         else:
-            app.airbrush.afterBrushStroke(app, app.image1)
+            app.airbrush.afterBrushStroke(app, app.paintLayer)
         app.drag = False
     else:
         app.drag = False
@@ -355,7 +369,7 @@ def mouseReleased(app, event):
                 if (app.userMode == "colorselect"):
 
                     
-                    r,g,b,a = app.image1.getpixel((coors[0], coors[1]))
+                    r,g,b,a = app.paintLayer.image.getpixel((coors[0], coors[1]))
                     #app.currentBrush = (r,g,b,a)
                     app.currentColor = (r,g,b)
                     app.opacitySlider.setAmount(a)
@@ -373,11 +387,11 @@ def mouseReleased(app, event):
 
                         imageX, imageY = coors[0], coors[1]
                         # draw pixels based on that
-                        app.testBrush.brushClick(imageX ,imageY, app.image1, app)
+                        app.testBrush.brushClick(imageX ,imageY, app.paintLayer, app)
                     else:
                         imageX, imageY = coors[0], coors[1]
                         # draw pixels based on that
-                        app.airbrush.brushClick(imageX ,imageY, app.image1, app)
+                        app.airbrush.brushClick(imageX ,imageY, app.paintLayer, app)
 
 # when the mouse is dragged
 def mouseDragged(app, event):
@@ -400,7 +414,7 @@ def mouseDragged(app, event):
 
     else:
         app.drag = True
-        # find the value inside the image1
+        # find the value inside the 
         imageX, imageY = insideImage(app,x,y)
         if app.testing:
             app.testBrush.duringBrushStroke(app, imageX, imageY)
@@ -429,7 +443,7 @@ def redrawAll(app, canvas):
 
     
     # display the user image
-    canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.image2))
+    canvas.create_image(centerX, centerY, image= app.paintLayer.zoomReturnLayer(app))
 
     if (app.airbrush.active):
         if app.testing:

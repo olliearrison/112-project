@@ -98,7 +98,8 @@ class Brush:
         app.oldX = None
         app.oldY = None
 
-        app.image1 = Image.alpha_composite(app.image1, self.getCurrentStroke())
+        #app.image1 = Image.alpha_composite(app.image1, self.getCurrentStroke())
+        layer.addBrushStroke(app, self.getCurrentStroke())
         self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight),
         (255,255,255,0))
 
