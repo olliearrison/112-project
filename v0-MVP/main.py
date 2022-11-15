@@ -70,9 +70,11 @@ def appStarted(app):
     loadColorSelect(app)
 
     # define primary image in RGBA (includes opacity 0-255)
-    app.background1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+    background = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
     (255,255,255,255))
-    app.background2 = app.scaleImage(app.background1, app.scaleFactor)
+    app.backgroundLayer = layer.Layer(background, 1, "normal", 1, True, None, None)
+    app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
+    #app.background2 = app.scaleImage(app.background1, app.scaleFactor)
 
     # layer (old)
     #app.image1 = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
@@ -232,7 +234,7 @@ def toggleWindow(app):
 # saves an image with a white background and with a transparent background
 # why image2?
 def saveImage(app):
-    flatImage = Image.alpha_composite(app.background1, app.paintLayer.image)
+    flatImage = Image.alpha_composite(app.background.image, app.paintLayer.image)
     app.paintLayer.image.save("result/clearImage.png","PNG")
     flatImage.save("result/flatImage.png","PNG")
     print("Image saved inside of result folder")
@@ -283,7 +285,7 @@ def keyPressed(app, event):
         #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
         app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
-        app.background2 = app.scaleImage(app.background1, app.scaleFactor)
+        app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "s":
         print("zoom out")
         print(app.scaleFactor)
@@ -293,7 +295,7 @@ def keyPressed(app, event):
         #app.image2 = app.scaleImage(app.image1, app.scaleFactor)
         app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
-        app.background2 = app.scaleImage(app.background1, app.scaleFactor)
+        app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "a":
         adjustBlack(app, 10)
     elif event.key == "d":
@@ -439,7 +441,7 @@ def redrawAll(app, canvas):
     centerX = app.width//2
     centerY = app.height//2
     
-    canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(app.background2))
+    canvas.create_image(centerX, centerY, image=app.backgroundLayer.zoomReturnLayer(app))
 
     
     # display the user image
