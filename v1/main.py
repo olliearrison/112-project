@@ -1,6 +1,5 @@
 from cmu_112_graphics import *
 import time
-
 import windows
 import button
 import slider
@@ -302,6 +301,7 @@ def keyPressed(app, event):
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "a":
         adjustBlack(app, 10)
+        getValues(app)
     elif event.key == "d":
         adjustBlack(app, -10)
 
@@ -470,4 +470,4 @@ def redrawAll(app, canvas):
         drawColorSelectBackground(app, canvas)
 
 # remember to remove mvcCheck
-runApp(width=800, height=550, mvcCheck = False)
+runApp(width=800, height=550)

@@ -1,6 +1,7 @@
 from cmu_112_graphics import *
 from coors import *
 from color import *
+import numpy as np
 
 def loadColorSelect(app):
     app.colorImage = Image.open("color.png").convert("RGBA")
@@ -44,6 +45,7 @@ def getColor(app, event):
 
         r,g,b,a = app.colorImageAdjust.getpixel((adjustX, adjustY))
         app.currentColor = (r,g,b)
+        print(app.currentColor)
 
 def adjustBlack(app, amount):
     print(amount)
@@ -91,13 +93,20 @@ def drawRoundedBoxBackground(app, canvas,xSize,ySize,xCenter, yCenter):
 def updateImage(app):
     r,g,b,a = app.colorImage.split()
 
+    const = (app.blackValue)/255
+    
     # sets each point on the brush to the correct value
-    r = r.point(lambda i: min(max(i + app.blackValue,0),255))
-    g = g.point(lambda i: min(max(i + app.blackValue,0),255))
-    b = b.point(lambda i: min(max(i + app.blackValue,0),255))
+    r = r.point(lambda i: min(max(i * const,0),255))
+    g = g.point(lambda i: min(max(i * const,0),255))
+    b = b.point(lambda i: min(max(i * const,0),255))
 
     # merges the values to create a final brush stamp
     app.colorImageAdjust = Image.merge('RGBA', (r, g, b, a))
+
+def getValues(app):
+    pix = np.asarray(app.colorImage)
+    np.argwhere(pix == [255,45,24])
+    print(pix)
 
 def drawColorSelectBackground(app, canvas):
     x1 = app.width//10*7
