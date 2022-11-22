@@ -250,9 +250,13 @@ def createButtons(app):
 
 def toggleColorWindow(app):
     app.colorWindow = not(app.colorWindow)
+    if app.colorWindow:
+        app.layerWindow = False
 
 def toggleLayerWindow(app):
     app.layerWindow = not(app.layerWindow)
+    if app.layerWindow:
+        app.colorWindow = False
 
 
 # saves an image with a white background and with a transparent background

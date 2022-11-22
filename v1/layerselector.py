@@ -4,15 +4,11 @@ from color import *
 from layerblock import *
 
 def loadLayerSelect(app):
-    app.colorImage = Image.open("color.png").convert("RGBA")
-    app.colorImageAdjust = Image.open("color.png").convert("RGBA")
-    app.blackValue = 0
-    app.colorCoor = [0,0]
+    app.layertitle = Image.open("layer-assets/layertitle.png").convert("RGBA")
+    app.layertitle = app.scaleImage(app.layertitle, 1/6)
 
-    app.scaleFactor = 1
     paintImageMini = Image.new('RGBA', (400, 450), (255,255,255,255))
     app.paintLayerMini = Layer(paintImageMini, 1, "normal", 1, True, None, None)
-    
     app.layerBlock = LayerBlock(app.paintLayerMini, True, False, 0)
     app.layerBlock.init(app)
 
@@ -121,6 +117,7 @@ def drawLayerSelectBackground(app, canvas):
 
     drawRoundedBoxBackground(app, canvas,app.width//10*1.3,app.height//5*2.5,centerX,centerY)
     app.layerBlock.drawLayerBlock(app,canvas)
+    canvas.create_image(centerX//10*9.2, centerY//3*1.2, image= ImageTk.PhotoImage(app.layertitle))
 
 
 

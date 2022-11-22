@@ -15,7 +15,7 @@ class LayerBlock:
 
     def getCoors(self, app):
         centerX = app.width//7*5.9
-        centerY = app.height//2
+        centerY = app.height//4.8 + self.index * 35
         return (centerX, centerY)
 
     def response(self):
