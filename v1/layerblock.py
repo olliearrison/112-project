@@ -2,27 +2,6 @@ from cmu_112_graphics import *
 from layer import *
 from button import *
  
-"""
-def appStarted(app):
-    app.scaleFactor = 1
-    paintImage = Image.new('RGBA', (400, 450), 
-    (255,90,30,255))
-
-    buttonImage = Image.open("layer-assets/normal.png").convert("RGBA")
-    buttonImage = app.scaleImage(buttonImage, 1/20)
-    tup = (buttonImage,buttonImage)
-
-    normal = Button(app, 10, app.width//2, app.height//2, response, False,tup, "tool")
-
-    app.paintLayer = Layer(paintImage, 1, "normal", 1, True, None, None)
-    app.layer1 = LayerBlock(app.paintLayer, True, False, 0, normal)
-
-def response():
-    print("hi")
-
-def redrawAll(app, canvas):
-    app.layer1.drawLayerBlock(app,canvas)
-"""
 
 class LayerBlock:
     def __init__(self, layer, visible, selected, index):

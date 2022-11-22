@@ -14,6 +14,9 @@ from color import *
 
 """
 Questions:
+- check for other x,y inputs????
+- why does slider not register bottom of slider
+
 - how to avoid circular inputs for layerblock, layerselect, and layer
 - how to handle scroll/too many layers: indicies
 - how to rearrange layers
@@ -119,7 +122,7 @@ def appStarted(app):
     app.barCurrent = app.height/2 -70 - 50 + 35
 
 
-    app.sizeSlider = slider.Slider(app, 10, 55, 5, 20,app.height/2 - 100, response, 
+    app.sizeSlider = slider.Slider(app, 10, 55, 5, 20, app.height/2 - 100, response, 
                     False, app.height/2 - 70)
 
     app.opacitySlider = slider.Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
@@ -313,7 +316,7 @@ def keyPressed(app, event):
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "a":
         adjustBlack(app, 10)
-        getValues(app)
+        #getValues(app)
     elif event.key == "d":
         adjustBlack(app, -10)
 
@@ -425,15 +428,15 @@ def mouseDragged(app, event):
         else:
             app.airbrush.size = app.sizeSlider.dragSlider(app,event)
             app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-
     else:
-        app.drag = True
         # find the value inside the 
         imageX, imageY = insideImage(app,x,y)
-        if app.testing:
-            app.testBrush.duringBrushStroke(app, imageX, imageY)
-        else:
-            app.airbrush.duringBrushStroke(app, imageX, imageY)
+        if (coorsWork(app, imageX, imageY)):
+            app.drag = True
+            if app.testing:
+                app.testBrush.duringBrushStroke(app, imageX, imageY)
+            else:
+                app.airbrush.duringBrushStroke(app, imageX, imageY)
 
 def redrawAll(app, canvas):
     # draw the background
