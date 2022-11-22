@@ -8,11 +8,17 @@ import layer
 from background import *
 from coors import *
 from colorselector import *
+from layerselector import *
 import math
 from color import *
 
 """
 Questions:
+- how to avoid circular inputs for layerblock, layerselect, and layer
+- how to handle scroll/too many layers: indicies
+- how to rearrange layers
+- how to reverse color select
+
 - blend window
 - where to put time capture (since redraw might not be ideal)
 - append time to list, pop from end, numpy
@@ -73,6 +79,7 @@ def appStarted(app):
     app.eraser = (255,255,255)
     app.currentColor = app.color
     app.colorWindow = False
+    app.layerWindow = False
 
     app.brushSize = 7
     app.scaleFactor = 1
@@ -80,8 +87,6 @@ def appStarted(app):
     app.toBeDrawn = set()
     app.timerDelay = 50
     app.drag = False
-
-    loadColorSelect(app)
 
     # define primary image in RGBA (includes opacity 0-255)
     background = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
@@ -129,6 +134,9 @@ def appStarted(app):
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
+
+    loadColorSelect(app)
+    loadLayerSelect(app)
 
     app.testing = False
     if app.testing:
@@ -209,11 +217,11 @@ def createButtons(app):
 
     # opens layers
     layersImage = getImage("layers", app)
-    layers = button.Button(app, 10, 18*rowWidth, 15, response, False, 
+    layers = button.Button(app, 10, 18*rowWidth, 15, toggleLayerWindow, False, 
     layersImage, "layers")
 
     colorImage = getImage("blank", app)
-    color = button.Button(app, 10, 19*rowWidth, 15, toggleWindow, False, 
+    color = button.Button(app, 10, 19*rowWidth, 15, toggleColorWindow, False, 
     colorImage, "color")
 
     # allows the user to select a color from the canvas
@@ -237,8 +245,12 @@ def createButtons(app):
                 selector, forward, backward])
     return result
 
-def toggleWindow(app):
+def toggleColorWindow(app):
     app.colorWindow = not(app.colorWindow)
+
+def toggleLayerWindow(app):
+    app.layerWindow = not(app.layerWindow)
+
 
 # saves an image with a white background and with a transparent background
 # why image2?
@@ -398,6 +410,7 @@ def mouseReleased(app, event):
 def mouseDragged(app, event):
     (x, y) = event.x, event.y
     app.colorWindow = False
+    app.layerWindow = False
 
     # check if the opacity or slide slider has been clicked
     if (app.opacitySlider.checkClicked(x, y, app)):
@@ -466,8 +479,11 @@ def redrawAll(app, canvas):
     # draw the sliders
     app.opacitySlider.drawSlider(app, canvas)
     app.sizeSlider.drawSlider(app, canvas)
+    
     if app.colorWindow:
         drawColorSelectBackground(app, canvas)
+    if app.layerWindow:
+        drawLayerSelectBackground(app, canvas)
 
 # remember to remove mvcCheck
 runApp(width=800, height=550)

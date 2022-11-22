@@ -1,7 +1,6 @@
 from cmu_112_graphics import *
 from coors import *
 from color import *
-import numpy as np
 
 def loadColorSelect(app):
     app.colorImage = Image.open("color.png").convert("RGBA")
@@ -9,9 +8,9 @@ def loadColorSelect(app):
     app.blackValue = 0
     app.colorCoor = [0,0]
 
-    app.colorSlider = ThinSlider(app, app.width//10*7+20, app.height//2 + 30, .75, 
-    print("hi"), True, 
-    0)
+    #app.colorSlider = ThinSlider(app, app.width//10*7+20, app.height//2 + 30, .75, 
+    #print("hi"), True, 0)
+
 
 def inCircle(app, x, y):
     x1 = app.width//10*7
@@ -103,11 +102,6 @@ def updateImage(app):
     # merges the values to create a final brush stamp
     app.colorImageAdjust = Image.merge('RGBA', (r, g, b, a))
 
-def getValues(app):
-    pix = np.asarray(app.colorImage)
-    np.argwhere(pix == [255,45,24])
-    print(pix)
-
 def drawColorSelectBackground(app, canvas):
     x1 = app.width//10*7
     y1 = app.height//15 * 1.5
@@ -126,7 +120,7 @@ def drawColorSelectBackground(app, canvas):
     ccenterY = centerY + app.colorCoor[1]
     canvas.create_oval(ccenterX-r,ccenterY-r,ccenterX+r,ccenterY+r, outline = "white")
 
-    app.colorSlider.drawSlider(app, canvas)
+    #app.colorSlider.drawSlider(app, canvas)
 
 class ThinSlider:
     # the amount variable should be changed to represent 0-255

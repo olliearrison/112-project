@@ -27,6 +27,7 @@ class Brush:
 
         newA = self.pressureOpacity/255
         # sets each point on the brush to the correct value
+        # lambda from stackoverflow
         r = r.point(lambda i: (i + 1) * newR)
         g = g.point(lambda i: (i + 1) * newG)
         b = b.point(lambda i: (i + 1) * newB)
@@ -74,7 +75,7 @@ class Brush:
     # recursivly fills the points between the last two coordinates with dots
     # until they are spaced less than 10 pixels apart
     def recursiveMidpoint(self, app, x1, y1, x2, y2):
-        maxDistance = min(self.size/10,10)
+        maxDistance = min(self.size/20,10)
         if (getDistance(x1, y1, x2, y2) < maxDistance):
             return None
         newCoorX = (x1 + x2)//2
