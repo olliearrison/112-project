@@ -7,10 +7,13 @@ def loadLayerSelect(app):
     app.layertitle = Image.open("layer-assets/layertitle.png").convert("RGBA")
     app.layertitle = app.scaleImage(app.layertitle, 1/6)
 
-    paintImageMini = Image.new('RGBA', (400, 450), (255,255,255,255))
-    app.paintLayerMini = Layer(paintImageMini, 1, "normal", 1, True, None, None)
-    app.layerBlock = LayerBlock(app.paintLayerMini, True, False, 0)
-    app.layerBlock.init(app)
+    app.allLayerBlocks = []
+
+    for layerI in range(len(app.allLayers)):
+        layerBlock = LayerBlock(app.allLayers[layerI], True, False, layerI)
+        layerBlock.init(app)
+        app.allLayerBlocks.append(layerBlock)
+    
 
 def response():
     print("hi")
@@ -26,12 +29,10 @@ def inCircle(app, x, y):
 
     r = 94
     if getDistance(centerX, centerY, x, y) <= r:
-        print("inside")
         adjustedX = x - centerX + r
         adjustedY = y - centerY + r
         app.colorCoor[0] = adjustedX - r
         app.colorCoor[1] = adjustedY - r
-        print(app.colorCoor)
         return (adjustedX, adjustedY)
     else:
         return (None, None)
@@ -41,16 +42,13 @@ def getColor(app, event):
     y = event.y
     adjustedX, adjustedY = inCircle(app, x, y)
     if (adjustedX != None):
-        print(adjustedX, adjustedY)
         adjustX = adjustedX
         adjustY = adjustedY
 
         r,g,b,a = app.colorImageAdjust.getpixel((adjustX, adjustY))
         app.currentColor = (r,g,b)
-        print(app.currentColor)
 
 def adjustBlack(app, amount):
-    print(amount)
     app.blackValue += amount
     updateImage(app)
 
@@ -116,7 +114,8 @@ def drawLayerSelectBackground(app, canvas):
     centerY = (y1 + y2)//2
 
     drawRoundedBoxBackground(app, canvas,app.width//10*1.3,app.height//5*2.5,centerX,centerY)
-    app.layerBlock.drawLayerBlock(app,canvas)
+    for layerBlock in app.allLayerBlocks:
+        layerBlock.drawLayerBlock(app,canvas)
     canvas.create_image(centerX//10*9.2, centerY//3*1.2, image= ImageTk.PhotoImage(app.layertitle))
 
 

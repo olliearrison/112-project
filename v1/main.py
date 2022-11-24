@@ -13,18 +13,27 @@ import math
 from color import *
 
 """
-Questions:
-- check for other x,y inputs????
-- why does slider not register bottom of slider
+To Do:
+get uncheck boxes working
+get x, y value from image
+align layer selected with the layer being drawn on
+add the n bit to the image
+add the color label to the window
+work on adding color history
+get new check button
+set window to constant size
+make zoom work again
+make save work again
 
+Questions:
+- making app responsive
+- reverse color select: search through all pixel values
+- create a small dictionary - if not there yet
+
+
+- check for other x,y inputs????
 - how to avoid circular inputs for layerblock, layerselect, and layer
 - how to handle scroll/too many layers: indicies
-- how to rearrange layers
-- how to reverse color select
-
-- blend window
-- where to put time capture (since redraw might not be ideal)
-- append time to list, pop from end, numpy
 
 circular buffers
 try some kind of division for colors
@@ -34,7 +43,6 @@ time entire duration, take difference and add it
 
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 
-- problem is back again?
 - test out layer mask (maybe create a test subclass to handle new brush
 ideas)
 - cache images
@@ -97,13 +105,6 @@ def appStarted(app):
     app.backgroundLayer = layer.Layer(background, 1, "normal", 1, True, None, None)
     app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
 
-    # new layer
-    paintImage = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
-    (255,255,255,0))
-    app.paintLayer = layer.Layer(paintImage, 1, "normal", 1, True, None, None)
-
-    app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
-
     brushImage = Image.open("airbrush.png").convert("RGBA")
     app.airbrush = brush.Brush(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
                 None, None, False)
@@ -138,8 +139,11 @@ def appStarted(app):
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
 
+    createLayers(app)
     loadColorSelect(app)
     loadLayerSelect(app)
+
+    app.layerSelectedI = 0
 
     app.testing = False
     if app.testing:
@@ -154,6 +158,19 @@ def appStarted(app):
         app.testBrush.opacity = initOpacity
         app.testBrush.createResultingBrush(app, app.currentColor, initSize)
 
+def createLayers(app):
+    app.allLayers = []
+    app.allScaleLayers = []
+
+    for i in range(3):
+        # new layer
+        paintImage = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+        (255,255,255,0))
+        paintLayer = layer.Layer(paintImage, 1, "normal", 1, False, None, None)
+        scalePaintLayer = paintLayer.zoomReturnLayer(app)
+
+        app.allLayers.append(paintLayer)
+        app.allScaleLayers.append(scalePaintLayer)
 
 def timerFired(app):
     for coor in app.toBeDrawn:
@@ -162,7 +179,7 @@ def timerFired(app):
         else:
             app.airbrush.addDot(coor[0],coor[1])
     app.toBeDrawn = set()
-    app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
+    app.scalePaintLayer = app.allLayers[app.layerSelectedI].zoomReturnLayer(app)
 
 # retreives the buttons, scales them, and returns them in a tuple
 def getImage(name, app):
@@ -256,15 +273,18 @@ def toggleColorWindow(app):
 def toggleLayerWindow(app):
     app.layerWindow = not(app.layerWindow)
     if app.layerWindow:
+        for layerI in range(len(app.allLayers)):
+            app.allLayerBlocks[layerI].updateImage(app.allLayers[layerI], app)
         app.colorWindow = False
 
 
 # saves an image with a white background and with a transparent background
 # why image2?
 def saveImage(app):
-    flatImage = Image.alpha_composite(app.backgroundLayer.image, app.paintLayer.image)
-    app.paintLayer.image.save("result/clearImage.png","PNG")
-    flatImage.save("result/flatImage.png","PNG")
+    #flatImage = Image.alpha_composite(app.backgroundLayer.image, app.paintLayer.image)
+    #app.paintLayer.image.save("result/clearImage.png","PNG")
+    #flatImage.save("result/flatImage.png","PNG")
+    print("NEED TO ADD FEATURE")
     print("Image saved inside of result folder")
 
 # draws each of the main buttons
@@ -298,6 +318,15 @@ def checkButtons(app, x, y):
             return True
     return False
 
+def checkLayerBlocks(app, x, y):
+    for layerBlockI in range(len(app.allLayerBlocks)):
+        if not(app.allLayerBlocks[layerBlockI].visibilityButton != None and 
+        app.allLayerBlocks[layerBlockI].visibilityButton.checkClicked(x,y,app)):
+            if app.allLayerBlocks[layerBlockI].checkClicked(x,y,app):
+                app.allLayerBlocks[layerBlockI].resetAllElse(app)
+                app.layerSelectedI = layerBlockI
+                return True
+
 # filler response function
 def response(app):
     print("response has been called")
@@ -308,14 +337,14 @@ def keyPressed(app, event):
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor + .1, 1)
         # scale the results image (but not the actual image)
-        app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
+        #app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "s":
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor - .1, 1)
         # scale the results image (but not the actual image)
-        app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
+        #app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "a":
@@ -360,6 +389,8 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
     return altered.convert("png")
 
 def mousePressed(app, event):
+    if app.layerWindow:
+        checkLayerBlocks(app, event.x, event.y)
     if (app.colorWindow and inCircle(app, event.x, event.y)[0] != None):
         getColor(app, event)
         
@@ -372,11 +403,12 @@ def mousePressed(app, event):
 def mouseReleased(app, event):
     
     # reset the x and y mouse values
+    index = 0
     if (app.drag):
         if app.testing:
-            app.testBrush.afterBrushStroke(app, app.paintLayer)
+            app.testBrush.afterBrushStroke(app, app.allLayers[index])
         else:
-            app.airbrush.afterBrushStroke(app, app.paintLayer)
+            app.airbrush.afterBrushStroke(app, app.allLayers[index])
         app.drag = False
     else:
         app.drag = False
@@ -391,7 +423,7 @@ def mouseReleased(app, event):
                 if (app.userMode == "colorselect"):
 
                     
-                    r,g,b,a = app.paintLayer.image.getpixel((coors[0], coors[1]))
+                    r,g,b,a = app.allLayers[app.layerSelectedI].image.getpixel((coors[0], coors[1]))
                     app.currentColor = (r,g,b)
                     app.opacitySlider.setAmount(a)
                     app.airbrush.opacity = a
@@ -407,11 +439,11 @@ def mouseReleased(app, event):
 
                         imageX, imageY = coors[0], coors[1]
                         # draw pixels based on that
-                        app.testBrush.brushClick(imageX ,imageY, app.paintLayer, app)
+                        app.testBrush.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
                     else:
                         imageX, imageY = coors[0], coors[1]
                         # draw pixels based on that
-                        app.airbrush.brushClick(imageX ,imageY, app.paintLayer, app)
+                        app.airbrush.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
 
 # when the mouse is dragged
 def mouseDragged(app, event):
@@ -454,7 +486,8 @@ def redrawAll(app, canvas):
 
     
     # display the user image
-    canvas.create_image(centerX, centerY, image= app.paintLayer.zoomReturnLayer(app))
+    for layer in app.allLayers:
+        canvas.create_image(centerX, centerY, image= layer.zoomReturnLayer(app))
 
     if (app.airbrush.active or (app.testing and app.testBrush.active)):
         if app.testing:
