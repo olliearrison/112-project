@@ -13,6 +13,8 @@ def loadLayerSelect(app):
         layerBlock = LayerBlock(app.allLayers[layerI], True, False, layerI)
         layerBlock.init(app)
         app.allLayerBlocks.append(layerBlock)
+
+    app.allLayerBlocks[0].selected = True
     
 
 def response():

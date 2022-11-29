@@ -57,6 +57,7 @@ class LayerBlock:
         
     def response(self, app):
         self.visible = not(self.visible)
+        self.visibilityButton.isActive = self.visible
         return True
 
     def scaleCropLayer(self,app):
@@ -91,5 +92,6 @@ class LayerBlock:
         else:
             canvas.create_image(centerX, centerY, image= ImageTk.PhotoImage(self.layerBlockImageScaled))
         if (self.visibilityButton != None):
+            self.visibilityButton.isActive = self.visible
             self.visibilityButton.drawButton(app, canvas)
         

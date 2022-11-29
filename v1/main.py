@@ -14,7 +14,8 @@ from color import *
 
 """
 To Do:
-get uncheck boxes working
+make window/color select work the same way with mode
+create gallery using modes
 get x, y value from image
 align layer selected with the layer being drawn on
 add the n bit to the image
@@ -406,9 +407,9 @@ def mouseReleased(app, event):
     index = 0
     if (app.drag):
         if app.testing:
-            app.testBrush.afterBrushStroke(app, app.allLayers[index])
+            app.testBrush.afterBrushStroke(app, app.allLayers[app.layerSelectedI])
         else:
-            app.airbrush.afterBrushStroke(app, app.allLayers[index])
+            app.airbrush.afterBrushStroke(app, app.allLayers[app.layerSelectedI])
         app.drag = False
     else:
         app.drag = False
@@ -448,6 +449,7 @@ def mouseReleased(app, event):
 # when the mouse is dragged
 def mouseDragged(app, event):
     (x, y) = event.x, event.y
+
     app.colorWindow = False
     app.layerWindow = False
 
@@ -486,18 +488,19 @@ def redrawAll(app, canvas):
 
     
     # display the user image
-    for layer in app.allLayers:
-        canvas.create_image(centerX, centerY, image= layer.zoomReturnLayer(app))
-
-    if (app.airbrush.active or (app.testing and app.testBrush.active)):
-        if app.testing:
-            currentStroke = app.testBrush.getCurrentStroke()
-            currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
-            canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
-        else:
-            currentStroke = app.airbrush.getCurrentStroke()
-            currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
-            canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
+    for layerI in range(len(app.allLayers)-1, -1,-1):
+        if app.allLayerBlocks[layerI].visible:
+            canvas.create_image(centerX, centerY, image= app.allLayers[layerI].zoomReturnLayer(app))
+            if layerI == app.layerSelectedI:
+                if (app.airbrush.active or (app.testing and app.testBrush.active)):
+                    if app.testing:
+                        currentStroke = app.testBrush.getCurrentStroke()
+                        currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
+                        canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
+                    else:
+                        currentStroke = app.airbrush.getCurrentStroke()
+                        currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
+                        canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
 
 
     # draw the windows

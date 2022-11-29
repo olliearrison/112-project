@@ -5,7 +5,7 @@ from color import *
 def loadColorSelect(app):
     app.colorImage = Image.open("color.png").convert("RGBA")
     app.colorImageAdjust = Image.open("color.png").convert("RGBA")
-    app.blackValue = 0
+    app.blackValue = 200
     app.colorCoor = [0,0]
 
     #app.colorSlider = ThinSlider(app, app.width//10*7+20, app.height//2 + 30, .75, 
