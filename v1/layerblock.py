@@ -50,6 +50,8 @@ class LayerBlock:
         buttonImage = app.scaleImage(buttonImage, 1/20)
         buttonImageActive = Image.open("layer-assets/visible-active.png").convert("RGBA")
         buttonImageActive = app.scaleImage(buttonImageActive, 1/20)
+        self.normalImage = Image.open("layer-assets/normal.png").convert("RGBA")
+        self.normalImage = app.scaleImage(self.normalImage, 1/20)
         tup = (buttonImage,buttonImageActive)
 
         centerX, centerY = self.getCoors(app)
@@ -94,4 +96,6 @@ class LayerBlock:
         if (self.visibilityButton != None):
             self.visibilityButton.isActive = self.visible
             self.visibilityButton.drawButton(app, canvas)
+        if (self.normalImage != None):
+            canvas.create_image(centerX+app.width//15, centerY, image= ImageTk.PhotoImage(self.normalImage))
         

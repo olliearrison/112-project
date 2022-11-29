@@ -14,23 +14,22 @@ from color import *
 
 """
 To Do:
+get local way of saving
+get crop working better
 make window/color select work the same way with mode
 create gallery using modes
 get x, y value from image
-align layer selected with the layer being drawn on
-add the n bit to the image
-add the color label to the window
 work on adding color history
-get new check button
 set window to constant size
 make zoom work again
-make save work again
+get black slider working
+triadic color scheme
+get adjusted color for color selector text
 
 Questions:
 - making app responsive
 - reverse color select: search through all pixel values
 - create a small dictionary - if not there yet
-
 
 - check for other x,y inputs????
 - how to avoid circular inputs for layerblock, layerselect, and layer
@@ -79,8 +78,20 @@ must be after MVP:
 - pygame maybe
 
 """
+def redrawAll(app, canvas):
+    font = 'Arial 26 bold'
+    canvas.create_text(app.width/2, 150, text='This demos a ModalApp!',
+                       font=font, fill='black')
+    canvas.create_text(app.width/2, 200, text='This is a modal splash screen!',
+                       font=font, fill='black')
+    canvas.create_text(app.width/2, 250, text='Press any key for the game!',
+                       font=font, fill='black')
 
-def appStarted(app):
+def keyPressed(app, event):
+    app.mode = 'drawMode'
+    drawMode_appStarted(app)
+
+def drawMode_appStarted(app):
     app.startTime = None
     app.margin = 5
     app.imageWidth, app.imageHeight = 400, 450
@@ -173,7 +184,7 @@ def createLayers(app):
         app.allLayers.append(paintLayer)
         app.allScaleLayers.append(scalePaintLayer)
 
-def timerFired(app):
+def drawMode_timerFired(app):
     for coor in app.toBeDrawn:
         if app.testing:
             app.testBrush.addDot(coor[0], coor[1])
@@ -279,14 +290,15 @@ def toggleLayerWindow(app):
         app.colorWindow = False
 
 
-# saves an image with a white background and with a transparent background
-# why image2?
+# saves an image with a white background
 def saveImage(app):
-    #flatImage = Image.alpha_composite(app.backgroundLayer.image, app.paintLayer.image)
-    #app.paintLayer.image.save("result/clearImage.png","PNG")
-    #flatImage.save("result/flatImage.png","PNG")
-    print("NEED TO ADD FEATURE")
-    print("Image saved inside of result folder")
+    flatImage = None
+    for layer in app.allLayers:
+        if flatImage == None:
+            flatImage = Image.alpha_composite(app.backgroundLayer.image, layer.image)
+        else:
+            flatImage = Image.alpha_composite(flatImage, layer.image)
+    flatImage.save("result/flatImage.png","PNG")
 
 # draws each of the main buttons
 def drawButtons(app, canvas):
@@ -333,7 +345,7 @@ def response(app):
     print("response has been called")
 
 # navigate options with keys
-def keyPressed(app, event):
+def drawMode_keyPressed(app, event):
     if event.key == "w":
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor + .1, 1)
@@ -389,7 +401,7 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
     altered = Image.merge('RGBA', (r, g, b, a))
     return altered.convert("png")
 
-def mousePressed(app, event):
+def drawMode_mousePressed(app, event):
     if app.layerWindow:
         checkLayerBlocks(app, event.x, event.y)
     if (app.colorWindow and inCircle(app, event.x, event.y)[0] != None):
@@ -401,7 +413,7 @@ def mousePressed(app, event):
             app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
 
 # when the mouse is released
-def mouseReleased(app, event):
+def drawMode_mouseReleased(app, event):
     
     # reset the x and y mouse values
     index = 0
@@ -447,7 +459,7 @@ def mouseReleased(app, event):
                         app.airbrush.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
 
 # when the mouse is dragged
-def mouseDragged(app, event):
+def drawMode_mouseDragged(app, event):
     (x, y) = event.x, event.y
 
     app.colorWindow = False
@@ -476,7 +488,7 @@ def mouseDragged(app, event):
             else:
                 app.airbrush.duringBrushStroke(app, imageX, imageY)
 
-def redrawAll(app, canvas):
+def drawMode_redrawAll(app, canvas):
     # draw the background
     drawBackground(app, canvas)
 

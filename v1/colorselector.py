@@ -8,6 +8,9 @@ def loadColorSelect(app):
     app.blackValue = 200
     app.colorCoor = [0,0]
 
+    app.colortitle = Image.open("layer-assets/colortitle.png").convert("RGBA")
+    app.colortitle = app.scaleImage(app.colortitle, 1/6)
+
     #app.colorSlider = ThinSlider(app, app.width//10*7+20, app.height//2 + 30, .75, 
     #print("hi"), True, 0)
 
@@ -119,6 +122,8 @@ def drawColorSelectBackground(app, canvas):
     ccenterX = centerX + app.colorCoor[0]
     ccenterY = centerY + app.colorCoor[1]
     canvas.create_oval(ccenterX-r,ccenterY-r,ccenterX+r,ccenterY+r, outline = "white")
+
+    canvas.create_image(centerX//10*9.2, centerY//3*1.2, image= ImageTk.PhotoImage(app.colortitle))
 
     #app.colorSlider.drawSlider(app, canvas)
 
