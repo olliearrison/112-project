@@ -99,3 +99,4 @@ class LayerBlock:
         if (self.normalImage != None):
             canvas.create_image(centerX+app.width//15, centerY, image= ImageTk.PhotoImage(self.normalImage))
         
+        

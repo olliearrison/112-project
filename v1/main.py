@@ -1,5 +1,4 @@
 from cmu_112_graphics import *
-import time
 import windows
 import button
 import slider
@@ -9,8 +8,8 @@ from background import *
 from coors import *
 from colorselector import *
 from layerselector import *
-import math
 from color import *
+from gallerybackground import *
 
 """
 To Do:
@@ -25,6 +24,7 @@ make zoom work again
 get black slider working
 triadic color scheme
 get adjusted color for color selector text
+make the size stuck in place
 
 Questions:
 - making app responsive
@@ -78,14 +78,20 @@ must be after MVP:
 - pygame maybe
 
 """
+def appStarted(app):
+    app.allDrawings = []
+
+
 def redrawAll(app, canvas):
-    font = 'Arial 26 bold'
-    canvas.create_text(app.width/2, 150, text='This demos a ModalApp!',
-                       font=font, fill='black')
-    canvas.create_text(app.width/2, 200, text='This is a modal splash screen!',
-                       font=font, fill='black')
-    canvas.create_text(app.width/2, 250, text='Press any key for the game!',
-                       font=font, fill='black')
+    drawGalleryBackground(app, canvas)
+
+    for drawing in app.allDrawings:
+        drawing.drawThumbnail()
+
+def mousePressed(app, event):
+    for drawing in app.allDrawings:
+        if (drawing.checkClicked(event.x, event.y)):
+            return True
 
 def keyPressed(app, event):
     app.mode = 'drawMode'
