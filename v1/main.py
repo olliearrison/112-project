@@ -9,6 +9,7 @@ from coors import *
 from colorselector import *
 from layerselector import *
 from color import *
+from drawing import *
 from gallerybackground import *
 
 """
@@ -79,30 +80,40 @@ must be after MVP:
 
 """
 def appStarted(app):
+    app.mode = 'galleryMode'
+    galleryMode_appStarted(app)
+
+def galleryMode_appStarted(app):
     app.allDrawings = []
 
-
-def redrawAll(app, canvas):
+def galleryMode_redrawAll(app, canvas):
     drawGalleryBackground(app, canvas)
 
     for drawing in app.allDrawings:
-        drawing.drawThumbnail()
+        drawing.drawThumbnail(app, canvas)
 
-def mousePressed(app, event):
+def galleryMode_mousePressed(app, event):
     for drawing in app.allDrawings:
-        if (drawing.checkClicked(event.x, event.y)):
+        if (drawing.checkClicked(event.x, event.y, app)):
+            drawMode_appStarted(app, app.allDrawings[drawing.index])
+            app.mode = 'drawMode'
             return True
 
-def keyPressed(app, event):
+def galleryMode_keyPressed(app, event):
     app.mode = 'drawMode'
-    drawMode_appStarted(app)
+    index = len(app.allDrawings)
+    newDrawing = Drawing(app, index)
+    app.allDrawings.append(newDrawing)
+    drawMode_appStarted(app, newDrawing)
 
-def drawMode_appStarted(app):
+def drawMode_appStarted(app, newDrawing):
     app.startTime = None
     app.margin = 5
     app.imageWidth, app.imageHeight = 400, 450
 
     app.reload = 0
+
+    app.currentDrawing = newDrawing
 
     app.color = (70, 10, 90)
     app.eraser = (255,255,255)
@@ -180,15 +191,22 @@ def createLayers(app):
     app.allLayers = []
     app.allScaleLayers = []
 
-    for i in range(3):
-        # new layer
-        paintImage = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
-        (255,255,255,0))
-        paintLayer = layer.Layer(paintImage, 1, "normal", 1, False, None, None)
-        scalePaintLayer = paintLayer.zoomReturnLayer(app)
 
-        app.allLayers.append(paintLayer)
-        app.allScaleLayers.append(scalePaintLayer)
+    if len(app.currentDrawing.layers) == 0:
+        for i in range(3):
+            # new layer
+            paintImage = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+            (255,255,255,0))
+            paintLayer = layer.Layer(paintImage, 1, "normal", 1, False, None, None)
+            scalePaintLayer = paintLayer.zoomReturnLayer(app)
+
+            app.allLayers.append(paintLayer)
+            app.allScaleLayers.append(scalePaintLayer)
+    else:
+        app.allLayers = app.currentDrawing.layers
+        for layerItem in app.allLayers:
+            scalePaintLayer = layerItem.zoomReturnLayer(app)
+            app.allScaleLayers.append(scalePaintLayer)
 
 def drawMode_timerFired(app):
     for coor in app.toBeDrawn:
@@ -223,7 +241,7 @@ def createButtons(app):
 
     # opens full layer adjustments
     wandImage = getImage("wand", app)
-    wand = button.Button(app, 10, 3*rowWidth, 15, response, False, 
+    wand = button.Button(app, 10, 3*rowWidth, 15, gallery, False, 
     wandImage, "wand")
 
     # allows user to select parts of the layer they are on
@@ -349,6 +367,19 @@ def checkLayerBlocks(app, x, y):
 # filler response function
 def response(app):
     print("response has been called")
+
+def gallery(app):
+    flatImage = None
+    for layer in app.allLayers:
+        if flatImage == None:
+            flatImage = Image.alpha_composite(app.backgroundLayer.image, layer.image)
+        else:
+            flatImage = Image.alpha_composite(flatImage, layer.image)
+
+    app.currentDrawing.setThumbnail(flatImage, app)
+    app.currentDrawing.setLayerBlocks(app.allLayerBlocks)
+    app.currentDrawing.setLayers(app.allLayers)
+    app.mode = 'galleryMode'
 
 # navigate options with keys
 def drawMode_keyPressed(app, event):

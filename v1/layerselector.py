@@ -6,13 +6,17 @@ from layerblock import *
 def loadLayerSelect(app):
     app.layertitle = Image.open("layer-assets/layertitle.png").convert("RGBA")
     app.layertitle = app.scaleImage(app.layertitle, 1/6)
-
     app.allLayerBlocks = []
 
-    for layerI in range(len(app.allLayers)):
-        layerBlock = LayerBlock(app.allLayers[layerI], True, False, layerI)
-        layerBlock.init(app)
-        app.allLayerBlocks.append(layerBlock)
+    if len(app.currentDrawing.layerBlocks) == 0:
+        print("creating new layers")
+
+        for layerI in range(len(app.allLayers)):
+            layerBlock = LayerBlock(app.allLayers[layerI], True, False, layerI)
+            layerBlock.init(app)
+            app.allLayerBlocks.append(layerBlock)
+    else:
+        app.allLayerBlocks = app.currentDrawing.layerBlocks
 
     app.allLayerBlocks[0].selected = True
     
