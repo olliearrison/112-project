@@ -12,25 +12,31 @@ from color import *
 from drawing import *
 from gallerybackground import *
 
+
 """
+Questions:
+- Best way to store information locally?
+- Rearranging layers
+- Would it be better to do more of the computation in timer fired
+
+Bugs:
+- maxes out recursion
+- letting draw while color selector, crashed when color selector
+
+Other:
+
 To Do:
-get local way of saving
+add button to create new image (rather than text input)
 get crop working better
 make window/color select work the same way with mode
-create gallery using modes
 get x, y value from image
 work on adding color history
-set window to constant size
 make zoom work again
+make sure images save without invisible layers
 get black slider working
 triadic color scheme
 get adjusted color for color selector text
 make the size stuck in place
-
-Questions:
-- making app responsive
-- reverse color select: search through all pixel values
-- create a small dictionary - if not there yet
 
 - check for other x,y inputs????
 - how to avoid circular inputs for layerblock, layerselect, and layer
@@ -81,10 +87,20 @@ must be after MVP:
 """
 def appStarted(app):
     app.mode = 'galleryMode'
+    adjustImage = getImage("plus", app, scale=2)
+    app.addLayer = button.Button(app, 30, app.width-80, 15, startDrawMode, False, 
+    adjustImage, "adjust")
     galleryMode_appStarted(app)
 
 def galleryMode_appStarted(app):
     app.allDrawings = []
+
+def startDrawMode(app):
+    app.mode = 'drawMode'
+    index = len(app.allDrawings)
+    newDrawing = Drawing(app, index)
+    app.allDrawings.append(newDrawing)
+    drawMode_appStarted(app, newDrawing)
 
 def galleryMode_redrawAll(app, canvas):
     drawGalleryBackground(app, canvas)
@@ -92,7 +108,11 @@ def galleryMode_redrawAll(app, canvas):
     for drawing in app.allDrawings:
         drawing.drawThumbnail(app, canvas)
 
+    app.addLayer.drawButton(app, canvas)
+
 def galleryMode_mousePressed(app, event):
+    if app.addLayer.checkClicked(event.x, event.y, app):
+        return True
     for drawing in app.allDrawings:
         if (drawing.checkClicked(event.x, event.y, app)):
             drawMode_appStarted(app, app.allDrawings[drawing.index])
@@ -218,15 +238,15 @@ def drawMode_timerFired(app):
     app.scalePaintLayer = app.allLayers[app.layerSelectedI].zoomReturnLayer(app)
 
 # retreives the buttons, scales them, and returns them in a tuple
-def getImage(name, app):
+def getImage(name, app, scale=1):
     imageTitle = "buttons/" + name + ".png"
     imageTitleActive = "buttons/" + name + "-active" + ".png"
 
     image = app.loadImage(imageTitle)
-    image = app.scaleImage(image, 1/10)
+    image = app.scaleImage(image, 1/10*scale)
 
     imageActive = app.loadImage(imageTitleActive)
-    imageActive = app.scaleImage(imageActive, 1/10)
+    imageActive = app.scaleImage(imageActive, 1/10*scale)
     return (image, imageActive)
 
 # creates each of the main screen buttons

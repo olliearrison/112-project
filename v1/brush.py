@@ -75,7 +75,7 @@ class Brush:
     # recursivly fills the points between the last two coordinates with dots
     # until they are spaced less than 10 pixels apart
     def recursiveMidpoint(self, app, x1, y1, x2, y2):
-        maxDistance = min(self.size/20,10)
+        maxDistance = min(self.size/15,10) + 1
         if (getDistance(x1, y1, x2, y2) < maxDistance):
             return None
         newCoorX = (x1 + x2)//2
