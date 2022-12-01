@@ -16,7 +16,7 @@ class Brush:
 
     def createResultingBrush(self, app, newColor, newSize):
         self.size = newSize
-        adjustedSize = (self.size/20 + 1)/10
+        adjustedSize = (self.size/30 + 1)/10
         # adjust the brush
         self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
 
@@ -70,8 +70,21 @@ class Brush:
 
     def drawLine(self, app, x1, y1, x2, y2):
         self.addDot(x2, y2)
-        self.recursiveMidpoint(app, x1, y1, x2, y2)
+        self.efficientMidpoint(app, x1, y1, x2, y2)
 
+    def efficientMidpoint(self, app, x1, y1, x2, y2):
+        maxDistance = min(self.size/20,10) + 1
+        distance = getDistance(x1, y1, x2, y2)
+        numOfPoints = int(distance/maxDistance) + 1
+        dx = (x2-x1)/numOfPoints
+        dy = (y2-y1)/numOfPoints
+        for i in range(1,numOfPoints):
+            intX = int(x1 + dx*i)
+            intY = int(y1 + dy*i)
+            tup = (intX, intY)
+            app.toBeDrawn.add(tup)
+
+    # unfortunatly, this function is less efficient, so I had to get rid of this
     # recursivly fills the points between the last two coordinates with dots
     # until they are spaced less than 10 pixels apart
     def recursiveMidpoint(self, app, x1, y1, x2, y2):

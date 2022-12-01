@@ -14,20 +14,25 @@ from gallerybackground import *
 
 
 """
+take 3 points, minimize angle between line segments
+take angle, divide by 3, add more points with the same angle
+similar to 3d graphics - spline bezir, curves
+
+mouseHeld on layer, 
+
 Questions:
 - Best way to store information locally?
+save layers
 - Rearranging layers
-- Would it be better to do more of the computation in timer fired
+mouseHeld
 
 Bugs:
-- maxes out recursion
 - letting draw while color selector, crashed when color selector
 
 Other:
 
 To Do:
-add button to create new image (rather than text input)
-get crop working better
+spline: https://stackoverflow.com/questions/31543775/how-to-perform-cubic-spline-interpolation-in-python
 make window/color select work the same way with mode
 get x, y value from image
 work on adding color history
@@ -35,7 +40,6 @@ make zoom work again
 make sure images save without invisible layers
 get black slider working
 triadic color scheme
-get adjusted color for color selector text
 make the size stuck in place
 
 - check for other x,y inputs????
@@ -43,7 +47,6 @@ make the size stuck in place
 - how to handle scroll/too many layers: indicies
 
 circular buffers
-try some kind of division for colors
 appStopped
 time entire duration, take difference and add it 
 
@@ -65,17 +68,6 @@ def composite(image1, image2, mask):
        "1", "L", or "RGBA", and must have the same size as the
        other two images.
 
-- eraser functionality
-- make everything on the app scale when the window size is changed 
-(use similar strategy as for robot)
-- make pixel distance reletive to size of brush (smaller brushes don't look 
-good @ 10 pixels)
-- create layer class
-- make layer naming consistant
-- add rotation (pillow)
-- non square/word based buttons (for gallery and on option pages)
-- create window to create and delete layers
-
 must be after MVP:
 - undo, redo
 - numpy
@@ -94,6 +86,8 @@ def appStarted(app):
 
 def galleryMode_appStarted(app):
     app.allDrawings = []
+    app.title = Image.open("gallery-assets/title.png").convert("RGBA")
+    app.title = app.scaleImage(app.title, 1/3)
 
 def startDrawMode(app):
     app.mode = 'drawMode'
@@ -109,6 +103,7 @@ def galleryMode_redrawAll(app, canvas):
         drawing.drawThumbnail(app, canvas)
 
     app.addLayer.drawButton(app, canvas)
+    canvas.create_image(100,30, image=ImageTk.PhotoImage(app.title))
 
 def galleryMode_mousePressed(app, event):
     if app.addLayer.checkClicked(event.x, event.y, app):
@@ -239,8 +234,8 @@ def drawMode_timerFired(app):
 
 # retreives the buttons, scales them, and returns them in a tuple
 def getImage(name, app, scale=1):
-    imageTitle = "buttons/" + name + ".png"
-    imageTitleActive = "buttons/" + name + "-active" + ".png"
+    imageTitle = "button-assets/" + name + ".png"
+    imageTitleActive = "button-assets/" + name + "-active" + ".png"
 
     image = app.loadImage(imageTitle)
     image = app.scaleImage(image, 1/10*scale)

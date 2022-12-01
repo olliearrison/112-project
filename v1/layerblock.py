@@ -70,8 +70,10 @@ class LayerBlock:
         maxWidth = blockWidth / 5.8
         maxHeight = (blockHeight+5) / 1.8
 
+        imageWidth, imageHeight = 400,450
+
         image = self.getImage(app)
-        scaleFactor = min(maxWidth/blockWidth,maxHeight/blockHeight)
+        scaleFactor = min(maxWidth/imageWidth,maxHeight/imageHeight)
         image = app.scaleImage(image, scaleFactor)
         image = image.crop((0,0,maxWidth, maxHeight))
         

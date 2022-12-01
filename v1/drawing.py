@@ -43,7 +43,7 @@ class Drawing:
 
     def drawThumbnail(self, app, canvas):
         x, y = self.getXY(app)
-        canvas.create_image(app.width//10 + x , app.height//5 + y, 
+        canvas.create_image(app.width//10 + x , app.height//4 + y, 
         image=ImageTk.PhotoImage(self.getThumbnail()))
 
     def response(self, app):
