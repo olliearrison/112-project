@@ -17,3 +17,5 @@ Pressing the eraser button will change to an eraser (change the brush value to w
 
 Pressing "a" will increase lightness when the color selection window is closed.
 Pressing "d" will decrease lightness when the color selection window is closed.
+
+![Preview of Application](https://github.com/olliearrison/112-project/blob/main/image.png)
