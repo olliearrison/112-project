@@ -12,14 +12,13 @@ from color import *
 from drawing import *
 from gallerybackground import *
 
-
 """ 
 Questions:
 - 
 
 Bugs Found:
-- letting draw while color selector, crashed when color selector window
 - can not be selecting a layer
+- 'NoneType' object is not subscriptable app.colorCoor[1] = loc[0]
 
 
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
@@ -81,8 +80,6 @@ def drawMode_appStarted(app, newDrawing):
     app.color = (70, 10, 90)
     app.eraser = (255,255,255)
     app.currentColor = app.color
-    app.colorWindow = False
-    app.layerWindow = False
 
     app.brushSize = 7
     app.scaleFactor = 1
@@ -236,11 +233,11 @@ def createButtons(app):
 
     # opens layers
     layersImage = getImage("layers", app)
-    layers = button.Button(app, 10, 18*rowWidth, 15, toggleLayerWindow, False, 
+    layers = button.Button(app, 10, 18*rowWidth, 15, layersMode, False, 
     layersImage, "layers")
 
     colorImage = getImage("blank", app)
-    color = button.Button(app, 10, 19*rowWidth, 15, toggleColorWindow, False, 
+    color = button.Button(app, 10, 19*rowWidth, 15, colorsMode, False, 
     colorImage, "color")
 
     # allows the user to select a color from the canvas
@@ -264,18 +261,20 @@ def createButtons(app):
                 selector, forward, backward])
     return result
 
-def toggleColorWindow(app):
+"""ef toggleColorWindow(app):
     app.colorWindow = not(app.colorWindow)
     if app.colorWindow:
         app.layerWindow = False
 
+# shouldn't be called
+# PROBABLY REMOVE
 def toggleLayerWindow(app):
     app.layerWindow = not(app.layerWindow)
     if app.layerWindow:
         for layerI in range(len(app.allLayers)):
             app.allLayerBlocks[layerI].updateImage(app.allLayers[layerI], app)
         app.colorWindow = False
-
+"""
 
 # saves an image with a white background
 def saveImage(app):
@@ -292,24 +291,13 @@ def drawButtons(app, canvas):
     for button in app.mainButtons:
         button.drawButton(app, canvas)
 
-# changes the user mode
-# if one button is selected, it will turn all other buttons off
-def changeMode(app, mode):
-    app.userMode = mode
-    for button in app.mainButtons:
-        if button.mode == mode:
-            button.resetAllElse(app)
-            return True
-    # if none are found (never should happen), 
-    print("no button found")
-    return False
-
 # checks whether any of the buttons or sliders have have been clicked
 def checkButtons(app, x, y):
     for button in app.mainButtons:
         # once a button has been clicked, stop looking
         if button.checkClicked(x,y, app):
-            button.resetAllElse(app)
+            #changeMode(app, button.mode)
+            #button.resetAllElse(app)
             return True
     for slider in app.mainSliders:
         if not(slider.checkClicked(x,y,app)):
@@ -348,9 +336,7 @@ def gallery(app):
 
 # navigate options with keys
 def drawMode_keyPressed(app, event):
-    print(event.key)
     if event.key == "BackSpace":
-        print("deleting")
         if len(app.allLayers) > 1:
             app.allLayers.pop(app.layerSelectedI)
             app.allLayerBlocks.pop(app.layerSelectedI)
@@ -375,24 +361,51 @@ def drawMode_keyPressed(app, event):
     elif event.key == "d":
         adjustBlack(app, -10)
 
+# changes the user mode
+# if one button is selected, it will turn all other buttons off
+def changeMode(app, mode):
+    app.userMode = mode
+    for button in app.mainButtons:
+        if button.mode == mode:
+            button.isActive = True
+            print(button.mode, button.isActive)
+        else:
+            button.isActive = False
+
 # select a color
 def colorSelectMode(app):
-    app.userMode = "colorselect"
-    print("color select")
+    changeMode(app, "selector")
+
+def colorsMode(app):
+    if app.userMode == "colors":
+        print("same mode, change to pen")
+        penMode(app)
+    else:
+        changeMode(app, "colors")
+
+def layersMode(app):
+    if app.userMode == "layers":
+        print("same mode, change to pen")
+        penMode(app)
+    else:
+        changeMode(app, "layers")
+        for layerI in range(len(app.allLayers)):
+            app.allLayerBlocks[layerI].updateImage(app.allLayers[layerI], app)
 
 # change to penMode
 def penMode(app):
-    app.userMode = "pen"
+    changeMode(app, "pen")
     app.currentColor = app.color
     if app.testing:
         app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
         print("pen mode")
     else:
         app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        print("pen mode")
 
 # change to eraserMode
 def eraserMode(app):
-    app.userMode = "eraser"
+    changeMode(app, "eraser")
     app.currentColor = app.eraser
     if app.testing:
         app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
@@ -411,9 +424,9 @@ def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
     return altered.convert("png")
 
 def drawMode_mousePressed(app, event):
-    if app.layerWindow:
+    if app.userMode == "layers":
         checkLayerBlocks(app, event.x, event.y)
-    if (app.colorWindow and inCircle(app, event.x, event.y)[0] != None):
+    if (app.userMode == "colors" and inCircle(app, event.x, event.y)[0] != None):
         getColor(app, event)
         
         if app.testing:
@@ -442,7 +455,7 @@ def drawMode_mouseReleased(app, event):
             coors = insideImage(app,x,y)
             # if the coordinates are in the image
             if (coors != None):
-                if (app.userMode == "colorselect"):
+                if (app.userMode == "selector"):
 
                     r,g,b,a = app.allLayers[app.layerSelectedI].image.getpixel((coors[0], coors[1]))
                     app.currentColor = (r,g,b)
@@ -479,10 +492,10 @@ def drawMode_mouseReleased(app, event):
 
 # when the mouse is dragged
 def drawMode_mouseDragged(app, event):
-    (x, y) = event.x, event.y
+    if app.userMode == "selector":
+        penMode(app)
 
-    app.colorWindow = False
-    app.layerWindow = False
+    (x, y) = event.x, event.y
 
     # check if the opacity or slide slider has been clicked
     if (app.opacitySlider.checkClicked(x, y, app)):
@@ -554,9 +567,9 @@ def drawMode_redrawAll(app, canvas):
     app.opacitySlider.drawSlider(app, canvas)
     app.sizeSlider.drawSlider(app, canvas)
     
-    if app.colorWindow:
+    if app.userMode == "colors":
         drawColorSelectBackground(app, canvas)
-    if app.layerWindow:
+    if app.userMode == "layers":
         drawLayerSelectBackground(app, canvas)
 
 # remember to remove mvcCheck

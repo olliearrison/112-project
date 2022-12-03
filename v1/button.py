@@ -15,13 +15,6 @@ class Button:
         self.images = images
         self.mode = mode
 
-    # resets all other buttons
-    def resetAllElse(self, app):
-        self.isActive = True
-        for button in app.mainButtons:
-            if self != button:
-                button.isActive = False
-
     # check if it has been clicked
     def checkClicked(self,x,y,app):
         x1 = self.x - self.size
@@ -33,7 +26,7 @@ class Button:
         if (x >= x1 and x <= x2) and (y >= y1 and y <= y2):
             # do the response and set itself to active
             self.response(self.app)
-            self.isActive = True
+            #self.isActive = True
             return True
         return False
 
