@@ -13,74 +13,22 @@ from drawing import *
 from gallerybackground import *
 
 
-"""
-take 3 points, minimize angle between line segments
-take angle, divide by 3, add more points with the same angle
-similar to 3d graphics - spline bezir, curves
-
-mouseHeld on layer, 
-
+""" 
 Questions:
-- Best way to store information locally?
-save layers
-- Rearranging layers
-mouseHeld
+- 
 
-Bugs:
-- letting draw while color selector, crashed when color selector
-
-Other:
-
-To Do:
-spline: https://stackoverflow.com/questions/31543775/how-to-perform-cubic-spline-interpolation-in-python
-make window/color select work the same way with mode
-get x, y value from image
-work on adding color history
-make zoom work again
-make sure images save without invisible layers
-get black slider working
-triadic color scheme
-make the size stuck in place
-
-- check for other x,y inputs????
-- how to avoid circular inputs for layerblock, layerselect, and layer
-- how to handle scroll/too many layers: indicies
-
-circular buffers
-appStopped
-time entire duration, take difference and add it 
+Bugs Found:
+- letting draw while color selector, crashed when color selector window
+- can not be selecting a layer
 
 
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
-
-- test out layer mask (maybe create a test subclass to handle new brush
-ideas)
-- cache images
-
-def composite(image1, image2, mask):
-
-    Create composite image by blending images using a transparency mask.
-
-    :param image1: The first image.
-    :param image2: The second image.  Must have the same mode and
-       size as the first image.
-    :param mask: A mask image.  This image can have mode
-       "1", "L", or "RGBA", and must have the same size as the
-       other two images.
-
-must be after MVP:
-- undo, redo
-- numpy
-- compile into c python
-- transparent blur windows (brushes, erasers, layers, colors)
-- threading: multi threading
-- pygame maybe
 
 """
 def appStarted(app):
     app.mode = 'galleryMode'
     adjustImage = getImage("plus", app, scale=2)
-    app.addLayer = button.Button(app, 30, app.width-80, 15, startDrawMode, False, 
+    app.addDrawing = button.Button(app, 30, app.width-80, 15, startDrawMode, False, 
     adjustImage, "adjust")
     galleryMode_appStarted(app)
 
@@ -102,11 +50,11 @@ def galleryMode_redrawAll(app, canvas):
     for drawing in app.allDrawings:
         drawing.drawThumbnail(app, canvas)
 
-    app.addLayer.drawButton(app, canvas)
+    app.addDrawing.drawButton(app, canvas)
     canvas.create_image(100,30, image=ImageTk.PhotoImage(app.title))
 
 def galleryMode_mousePressed(app, event):
-    if app.addLayer.checkClicked(event.x, event.y, app):
+    if app.addDrawing.checkClicked(event.x, event.y, app):
         return True
     for drawing in app.allDrawings:
         if (drawing.checkClicked(event.x, event.y, app)):
@@ -266,7 +214,7 @@ def createButtons(app):
 
     # allows the user to adjust the selection
     adjustImage = getImage("adjust", app)
-    adjust = button.Button(app, 10, 5*rowWidth, 15, response, False, 
+    adjust = button.Button(app, 10, 5*rowWidth, 15, getPixelValueXY, False, 
     adjustImage, "adjust")
 
     # either switches to the selected pen or opens a window to choose a pen
@@ -371,13 +319,15 @@ def checkButtons(app, x, y):
     return False
 
 def checkLayerBlocks(app, x, y):
+    app.addLayer.checkClicked(x,y,app)
     for layerBlockI in range(len(app.allLayerBlocks)):
-        if not(app.allLayerBlocks[layerBlockI].visibilityButton != None and 
-        app.allLayerBlocks[layerBlockI].visibilityButton.checkClicked(x,y,app)):
-            if app.allLayerBlocks[layerBlockI].checkClicked(x,y,app):
-                app.allLayerBlocks[layerBlockI].resetAllElse(app)
-                app.layerSelectedI = layerBlockI
-                return True
+        if app.allLayerBlocks[layerBlockI].layerBlockImageScaled != None:
+            if not(app.allLayerBlocks[layerBlockI].visibilityButton != None and
+            app.allLayerBlocks[layerBlockI].visibilityButton.checkClicked(x,y,app)):
+                if app.allLayerBlocks[layerBlockI].checkClicked(x,y,app):
+                    app.allLayerBlocks[layerBlockI].resetAllElse(app)
+                    app.layerSelectedI = layerBlockI
+                    return True
 
 # filler response function
 def response(app):
@@ -398,6 +348,13 @@ def gallery(app):
 
 # navigate options with keys
 def drawMode_keyPressed(app, event):
+    print(event.key)
+    if event.key == "BackSpace":
+        print("deleting")
+        if len(app.allLayers) > 1:
+            app.allLayers.pop(app.layerSelectedI)
+            app.allLayerBlocks.pop(app.layerSelectedI)
+            app.layerSelectedI = max(0, app.layerSelectedI-1)
     if event.key == "w":
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor + .1, 1)
@@ -487,12 +444,22 @@ def drawMode_mouseReleased(app, event):
             if (coors != None):
                 if (app.userMode == "colorselect"):
 
-                    
                     r,g,b,a = app.allLayers[app.layerSelectedI].image.getpixel((coors[0], coors[1]))
                     app.currentColor = (r,g,b)
                     app.opacitySlider.setAmount(a)
                     app.airbrush.opacity = a
                     app.airbrush.color = app.currentColor
+
+                    if a == 0:
+                        app.colorCoor[0] = 0
+                        app.colorCoor[1] = 0
+                    else:
+                        loc = getPixelValueXY(app)
+                        app.colorCoor[1] = loc[0]
+                        app.colorCoor[0] = loc[1]
+                        app.blackValue = loc[2]
+                        updateImage(app)
+
                     changeMode(app, "pen")
                     if app.testing:
                         app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)

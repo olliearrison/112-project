@@ -1,10 +1,13 @@
 from cmu_112_graphics import *
 from coors import *
 from color import *
+import numpy as np
+import colorsys
 
 def loadColorSelect(app):
     app.colorImage = Image.open("color.png").convert("RGBA")
     app.colorImageAdjust = Image.open("color.png").convert("RGBA")
+    app.colorImageHSV = Image.open("color.png").convert("HSV")
     app.blackValue = 200
     app.colorCoor = [0,0]
 
@@ -14,6 +17,41 @@ def loadColorSelect(app):
     #app.colorSlider = ThinSlider(app, app.width//10*7+20, app.height//2 + 30, .75, 
     #print("hi"), True, 0)
 
+def getPixelValueXY(app):
+    updateImage(app)
+    r, g, b, = app.currentColor
+    h, s, v = colorsys.rgb_to_hsv(r/255,g/255,b/255)
+
+    hue = np.array(app.colorImageHSV)[:,:,0]
+    saturation = np.array(app.colorImageHSV)[:,:,1]
+
+    h = int(h*255)
+    s = int(s*255)
+    v = int(v*255)
+
+    error = 1
+
+    hueMatches = np.where((hue >= h - error) & (hue <= h + error))
+    saturationMatches = np.where((saturation > s - error) & (saturation < s + error))
+
+    hueMatchX = hueMatches[0].tolist()
+    hueMatchY = hueMatches[1].tolist()
+    mergedHue = tuple(zip(hueMatchX, hueMatchY))
+
+    saturationMatchX = saturationMatches[0].tolist()
+    saturationMatchY = saturationMatches[1].tolist()
+    mergedSaturation = tuple(zip(saturationMatchX, saturationMatchY))
+
+    for item in mergedHue:
+        if item in mergedSaturation:
+            #print(item)
+            print(h, np.array(app.colorImageHSV)[item[0]][item[1]][0])
+            print(s, np.array(app.colorImageHSV)[item[0]][item[1]][1])
+            print((item[0],item[1],v))
+            return(item[0]-100,item[1]-100,v)
+    
+
+    
 
 def inCircle(app, x, y):
     x1 = app.width//10*7

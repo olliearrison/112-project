@@ -2,8 +2,31 @@ from cmu_112_graphics import *
 from coors import *
 from color import *
 from layerblock import *
+import button
+from layer import *
+
+def addLayer(app):
+    if len(app.allLayers) <= 4:
+        paintImage = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
+                (255,255,255,0))
+        paintLayer = Layer(paintImage, 1, "normal", 1, False, None, None)
+        scalePaintLayer = paintLayer.zoomReturnLayer(app)
+
+        app.allLayers.append(paintLayer)
+        app.allScaleLayers.append(scalePaintLayer)
+
+        layerBlock = LayerBlock(app.allLayers[len(app.allLayers)-1], True, False, len(app.allLayers)-1)
+        layerBlock.init(app)
+        app.allLayerBlocks.append(layerBlock)
+        print("add layer")
 
 def loadLayerSelect(app):
+    image = app.loadImage("layer-assets/plus.png")
+    image = app.scaleImage(image, 1/9)
+    tup = (image,image)
+    app.addLayer = button.Button(app, 10, app.width-60, 70, addLayer, False, 
+    tup, "adjust")
+
     app.layertitle = Image.open("layer-assets/layertitle.png").convert("RGBA")
     app.layertitle = app.scaleImage(app.layertitle, 1/6)
     app.allLayerBlocks = []
@@ -123,6 +146,6 @@ def drawLayerSelectBackground(app, canvas):
     for layerBlock in app.allLayerBlocks:
         layerBlock.drawLayerBlock(app,canvas)
     canvas.create_image(centerX//10*9.2, centerY//3*1.2, image= ImageTk.PhotoImage(app.layertitle))
-
+    app.addLayer.drawButton(app, canvas)
 
 

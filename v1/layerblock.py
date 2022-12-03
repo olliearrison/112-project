@@ -16,6 +16,7 @@ class LayerBlock:
         self.visibilityButton = None
 
     def checkClicked(self, x, y, app):
+
         blockWidth, blockHeight = self.layerBlockImageScaled.size
         maxWidth = blockWidth
         maxHeight = 33
@@ -40,10 +41,13 @@ class LayerBlock:
                     layerBlock.selected = False
 
     def getCoors(self, app):
+        self.index = app.allLayers.index(self.layer)
+
         centerX = app.width//7*5.9
         centerY = app.height//4.8 + self.index * 40
+        if self.visibilityButton != None:
+            self.visibilityButton.y = centerY - 4
         return (centerX, centerY)
-
 
     def init(self, app):
         buttonImage = Image.open("layer-assets/visible.png").convert("RGBA")
