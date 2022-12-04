@@ -1,10 +1,11 @@
 from cmu_112_graphics import *
 from coors import *
+import random
 
 class Brush:
     # self.opacity is 0-255
     def __init__(self, brushImage, color, size, opacity, pressureOpacity,
-    resultingBrush, currentStroke, active):
+    resultingBrush, currentStroke, active, sizeRange, jitter = False):
         self.brushImage = brushImage
         self.color = color
         self.size = size
@@ -13,12 +14,14 @@ class Brush:
         self.resultingBrush = resultingBrush
         self.currentStroke = currentStroke
         self.active = active
+        self.sizeRange = sizeRange
+        self.jitter = jitter
 
     def createResultingBrush(self, app, newColor, newSize):
         self.size = newSize
-        adjustedSize = (self.size/30 + 1)/10
+        adjustedSize = self.sizeRange[0] + (self.sizeRange[1]-self.sizeRange[0])*self.size/100
         # adjust the brush
-        self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
+        self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize/100)
 
         self.color = newColor
         newR, newG, newB = self.color[0],self.color[1],self.color[2]#,self.color[3]
@@ -48,9 +51,12 @@ class Brush:
             self.afterBrushStroke(app, layer)
 
     def addDot(self, x, y):
+        resultingBrush = self.resultingBrush
+        if self.jitter:
+            resultingBrush = resultingBrush.rotate(random.randint(1,10))
         brushWidth, brushHeight = self.resultingBrush.size
         adjust = brushWidth //2
-        self.currentStroke.alpha_composite(self.resultingBrush, dest = (x - adjust, y - adjust))
+        self.currentStroke.alpha_composite(resultingBrush, dest = (x - adjust, y - adjust))
 
     def duringBrushStroke(self, app, x, y):
         if not(self.active):
@@ -73,7 +79,7 @@ class Brush:
         self.efficientMidpoint(app, x1, y1, x2, y2)
 
     def efficientMidpoint(self, app, x1, y1, x2, y2):
-        maxDistance = min(self.size/20,10) + 1
+        maxDistance = min(self.size/80,5) + 1
         distance = getDistance(x1, y1, x2, y2)
         numOfPoints = int(distance/maxDistance) + 1
         dx = (x2-x1)/numOfPoints

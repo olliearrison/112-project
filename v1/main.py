@@ -94,16 +94,20 @@ def drawMode_appStarted(app, newDrawing):
     app.backgroundLayer = layer.Layer(background, 1, "normal", 1, True, None, None)
     app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
 
-    brushImage = Image.open("airbrush.png").convert("RGBA")
-    app.airbrush = brush.Brush(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
-                None, None, False)
+    airbrushImage = Image.open("airbrush.png").convert("RGBA")
+    app.airbrush = brush.Brush(airbrushImage, app.currentColor, 10, 255, 80, 
+                None, None, False, (10, 80))
+
+    pencilImage = Image.open("pencil.png").convert("RGBA")
+    app.pencil = brush.Brush(pencilImage, app.currentColor, 10, 255, 80, 
+                None, None, False, (3,10), jitter = True)
 
     # holds the most recent x and y position on the canvas
     app.oldX = None
     app.oldY = None
 
     # defines the user mode: pen, blend, eraser, layer, colorselect, etc
-    app.userMode = "pen"
+    app.userMode = "pencil"
 
     # creates the buttons
     app.mainButtons = createButtons(app)
@@ -118,12 +122,16 @@ def drawMode_appStarted(app, newDrawing):
     app.opacitySlider = slider.Slider(app, 10, 50, 5, 20,app.height/2 + 55, response, 
                     True, 285)
 
-    initSize = 60
+    initSize = 40
     initOpacity = 200
+
     app.opacitySlider.setAmount(initOpacity)
     app.sizeSlider.setAmount(initSize)
+
     app.airbrush.opacity = initOpacity
+    app.pencil.opacity = initOpacity
     app.airbrush.createResultingBrush(app, app.currentColor, initSize)
+    app.pencil.createResultingBrush(app, app.currentColor, initSize/4)
 
     app.mainSliders = []
     app.mainSliders.extend([app.opacitySlider, app.sizeSlider])
@@ -134,18 +142,6 @@ def drawMode_appStarted(app, newDrawing):
 
     app.layerSelectedI = 0
 
-    app.testing = False
-    if app.testing:
-        background = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
-        (255,200,255,255))
-        app.backgroundLayer = layer.Layer(background, 1, "normal", 1, True, None, None)
-        app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
-
-
-        app.testBrush = brush.Testing(brushImage, app.currentColor, app.height/2 - 70, 255, 80, 
-                None, None, False)
-        app.testBrush.opacity = initOpacity
-        app.testBrush.createResultingBrush(app, app.currentColor, initSize)
 
 def createLayers(app):
     app.allLayers = []
@@ -170,10 +166,10 @@ def createLayers(app):
 
 def drawMode_timerFired(app):
     for coor in app.toBeDrawn:
-        if app.testing:
-            app.testBrush.addDot(coor[0], coor[1])
-        else:
+        if app.userMode == "airbrush":
             app.airbrush.addDot(coor[0],coor[1])
+        elif app.userMode == "pencil":
+            app.pencil.addDot(coor[0],coor[1])
     app.toBeDrawn = set()
     app.scalePaintLayer = app.allLayers[app.layerSelectedI].zoomReturnLayer(app)
 
@@ -216,14 +212,14 @@ def createButtons(app):
 
     # either switches to the selected pen or opens a window to choose a pen
     penImage = getImage("pen", app)
-    pen = button.Button(app, 10, 15*rowWidth, 15, penMode, True, 
-    penImage, "pen")
+    pen = button.Button(app, 10, 15*rowWidth, 15, pencilMode, True, 
+    penImage, "pencil")
 
     # either switches to the selected blender or opens a window to choose a
     # blender
     blendImage = getImage("blend", app)
-    blend = button.Button(app, 10, 16*rowWidth, 15, response, False, 
-    blendImage, "blend")
+    blend = button.Button(app, 10, 16*rowWidth, 15, airbrushMode, False, 
+    blendImage, "airbrush")
 
     # either switches to the selected eraser or opens a window to choose 
     # a eraser
@@ -378,50 +374,49 @@ def colorSelectMode(app):
 
 def colorsMode(app):
     if app.userMode == "colors":
-        print("same mode, change to pen")
-        penMode(app)
+        print("same mode, change to pencil")
+        pencilMode(app)
     else:
         changeMode(app, "colors")
 
 def layersMode(app):
     if app.userMode == "layers":
-        print("same mode, change to pen")
-        penMode(app)
+        print("same mode, change to pencil")
+        pencilMode(app)
     else:
         changeMode(app, "layers")
         for layerI in range(len(app.allLayers)):
             app.allLayerBlocks[layerI].updateImage(app.allLayers[layerI], app)
 
 # change to penMode
-def penMode(app):
-    changeMode(app, "pen")
-    app.currentColor = app.color
-    if app.testing:
-        app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-        print("pen mode")
-    else:
-        app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-        print("pen mode")
+def pencilMode(app):
+    changeMode(app, "pencil")
+    #app.currentColor = app.color
+
+    app.opacitySlider.setAmount(app.pencil.opacity)
+    app.sizeSlider.setAmount(app.pencil.size)
+    app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
+
+# change to penMode
+def airbrushMode(app):
+    changeMode(app, "airbrush")
+    #app.currentColor = app.color
+    app.opacitySlider.setAmount(app.airbrush.opacity)
+    app.sizeSlider.setAmount(app.airbrush.size)
+    app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
 
 # change to eraserMode
 def eraserMode(app):
     changeMode(app, "eraser")
     app.currentColor = app.eraser
-    if app.testing:
-        app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-    else:
+
+    if app.userMode == "airbrush":
         app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+    elif app.userMode == "pencil":
+        app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
+
     print("eraser mode")
 
-def changeToWhite(app, input, newR = 255,newG = 255,newB = 255):
-    altered = input.convert("RGBA")
-    app.brush = Image.open("airbrush.png").convert("RGBA")
-    r,g,b,a = app.brush.split()
-    r = r.point(lambda i: (i+1) * newR)
-    g = g.point(lambda i: (i + 1) * newG)
-    b = b.point(lambda i: (i+1) * newB)
-    altered = Image.merge('RGBA', (r, g, b, a))
-    return altered.convert("png")
 
 def drawMode_mousePressed(app, event):
     if app.userMode == "layers":
@@ -429,10 +424,10 @@ def drawMode_mousePressed(app, event):
     if (app.userMode == "colors" and inCircle(app, event.x, event.y)[0] != None):
         getColor(app, event)
         
-        if app.testing:
-            app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-        else:
+        if app.userMode == "airbrush":
             app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        elif app.userMode == "pencil":
+            app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
 
 # when the mouse is released
 def drawMode_mouseReleased(app, event):
@@ -440,10 +435,10 @@ def drawMode_mouseReleased(app, event):
     # reset the x and y mouse values
     index = 0
     if (app.drag):
-        if app.testing:
-            app.testBrush.afterBrushStroke(app, app.allLayers[app.layerSelectedI])
-        else:
+        if app.userMode == "airbrush":
             app.airbrush.afterBrushStroke(app, app.allLayers[app.layerSelectedI])
+        elif app.userMode == "pencil":
+            app.pencil.afterBrushStroke(app, app.allLayers[app.layerSelectedI])
         app.drag = False
     else:
         app.drag = False
@@ -463,6 +458,9 @@ def drawMode_mouseReleased(app, event):
                     app.airbrush.opacity = a
                     app.airbrush.color = app.currentColor
 
+                    app.pencil.opacity = a
+                    app.pencil.color = app.currentColor
+
                     if a == 0:
                         app.colorCoor[0] = 0
                         app.colorCoor[1] = 0
@@ -473,52 +471,49 @@ def drawMode_mouseReleased(app, event):
                         app.blackValue = loc[2]
                         updateImage(app)
 
-                    changeMode(app, "pen")
-                    if app.testing:
-                        app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-                    else:
+                    changeMode(app, "pencil")
+                    
+                    if app.userMode == "airbrush":
                         app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+                    elif app.userMode == "pencil":
+                        app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
                 else:
-                
-                    if app.testing:
-
-                        imageX, imageY = coors[0], coors[1]
-                        # draw pixels based on that
-                        app.testBrush.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
-                    else:
-                        imageX, imageY = coors[0], coors[1]
-                        # draw pixels based on that
+                    imageX, imageY = coors[0], coors[1]
+                    if app.userMode == "airbrush":
                         app.airbrush.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
-
+                    elif app.userMode == "pencil":
+                        app.pencil.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
+                    
 # when the mouse is dragged
 def drawMode_mouseDragged(app, event):
     if app.userMode == "selector":
-        penMode(app)
+        pencilMode(app)
 
     (x, y) = event.x, event.y
 
     # check if the opacity or slide slider has been clicked
     if (app.opacitySlider.checkClicked(x, y, app)):
-        if app.testing:
-            app.testBrush.opacity = app.opacitySlider.dragSlider(app, event)
-        else:
+        if app.userMode == "airbrush":
             app.airbrush.opacity = app.opacitySlider.dragSlider(app, event)
+        elif app.userMode == "pencil":
+            app.pencil.opacity = app.opacitySlider.dragSlider(app, event)
     elif (app.sizeSlider.checkClicked(x, y, app)):
-        if app.testing:
-            app.testBrush.size = app.sizeSlider.dragSlider(app,event)
-            app.testBrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
-        else:
+        if app.userMode == "airbrush":
             app.airbrush.size = app.sizeSlider.dragSlider(app,event)
             app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
+        elif app.userMode == "pencil":
+            app.pencil.size = app.sizeSlider.dragSlider(app,event)
+            app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
     else:
         # find the value inside the 
         imageX, imageY = insideImage(app,x,y)
         if (coorsWork(app, imageX, imageY)):
             app.drag = True
-            if app.testing:
-                app.testBrush.duringBrushStroke(app, imageX, imageY)
-            else:
+            if app.userMode == "airbrush":
                 app.airbrush.duringBrushStroke(app, imageX, imageY)
+            elif app.userMode == "pencil":
+                app.pencil.duringBrushStroke(app, imageX, imageY)
+            
 
 def drawMode_redrawAll(app, canvas):
     # draw the background
@@ -536,16 +531,17 @@ def drawMode_redrawAll(app, canvas):
         if app.allLayerBlocks[layerI].visible:
             canvas.create_image(centerX, centerY, image= app.allLayers[layerI].zoomReturnLayer(app))
             if layerI == app.layerSelectedI:
-                if (app.airbrush.active or (app.testing and app.testBrush.active)):
-                    if app.testing:
-                        currentStroke = app.testBrush.getCurrentStroke()
-                        currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
-                        canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
-                    else:
+                if app.userMode == "airbrush":
+                    if app.airbrush.active:
                         currentStroke = app.airbrush.getCurrentStroke()
                         currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
                         canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
-
+                elif app.userMode == "pencil":
+                    if app.pencil.active:
+                        currentStroke = app.pencil.getCurrentStroke()
+                        currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
+                        canvas.create_image(centerX, centerY, image=ImageTk.PhotoImage(currentStroke))
+                
 
     # draw the windows
     windows.drawWindows(app, canvas)
