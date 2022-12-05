@@ -18,7 +18,8 @@ Questions:
 
 Bugs Found:
 - can not be selecting a layer
-- 'NoneType' object is not subscriptable app.colorCoor[1] = loc[0]
+- 'NoneType' object is not subscriptable app.colorCoor[1] = loc[0] after trying
+to select a blank bit of canvas
 
 
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
@@ -340,16 +341,22 @@ def drawMode_keyPressed(app, event):
     if event.key == "w":
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor + .1, 1)
+        for layer in app.allLayers:
+            layer.calculateLayer(app)
         # scale the results image (but not the actual image)
         #app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
+        app.backgroundLayer.calculateLayer(app)
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "s":
         # adjust the scale factor
         app.scaleFactor = round(app.scaleFactor - .1, 1)
+        for layer in app.allLayers:
+            layer.calculateLayer(app)
         # scale the results image (but not the actual image)
         #app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
+        app.backgroundLayer.calculateLayer(app)
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "a":
         adjustBlack(app, 10)
@@ -375,14 +382,14 @@ def colorSelectMode(app):
 def colorsMode(app):
     if app.userMode == "colors":
         print("same mode, change to pencil")
-        pencilMode(app)
+        airbrushMode(app)
     else:
         changeMode(app, "colors")
 
 def layersMode(app):
     if app.userMode == "layers":
         print("same mode, change to pencil")
-        pencilMode(app)
+        airbrushMode(app)
     else:
         changeMode(app, "layers")
         for layerI in range(len(app.allLayers)):
@@ -466,12 +473,13 @@ def drawMode_mouseReleased(app, event):
                         app.colorCoor[1] = 0
                     else:
                         loc = getPixelValueXY(app)
-                        app.colorCoor[1] = loc[0]
-                        app.colorCoor[0] = loc[1]
-                        app.blackValue = loc[2]
+                        if loc != None:
+                            app.colorCoor[1] = loc[0]
+                            app.colorCoor[0] = loc[1]
+                            app.blackValue = loc[2]
                         updateImage(app)
 
-                    changeMode(app, "pencil")
+                    changeMode(app, "airbrush")
                     
                     if app.userMode == "airbrush":
                         app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
@@ -487,7 +495,7 @@ def drawMode_mouseReleased(app, event):
 # when the mouse is dragged
 def drawMode_mouseDragged(app, event):
     if app.userMode == "selector":
-        pencilMode(app)
+        airbrushMode(app)
 
     (x, y) = event.x, event.y
 
@@ -506,6 +514,8 @@ def drawMode_mouseDragged(app, event):
             app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
     else:
         # find the value inside the 
+        if app.userMode == "layers" or app.userMode == "colors":
+            airbrushMode(app)
         imageX, imageY = insideImage(app,x,y)
         if (coorsWork(app, imageX, imageY)):
             app.drag = True
@@ -513,6 +523,8 @@ def drawMode_mouseDragged(app, event):
                 app.airbrush.duringBrushStroke(app, imageX, imageY)
             elif app.userMode == "pencil":
                 app.pencil.duringBrushStroke(app, imageX, imageY)
+
+                
             
 
 def drawMode_redrawAll(app, canvas):

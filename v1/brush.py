@@ -78,6 +78,8 @@ class Brush:
         self.addDot(x2, y2)
         self.efficientMidpoint(app, x1, y1, x2, y2)
 
+    # interpolation from 
+    # https://stackoverflow.com/questions/31543775/how-to-perform-cubic-spline-interpolation-in-python
     def efficientMidpoint(self, app, x1, y1, x2, y2):
         maxDistance = min(self.size/80,5) + 1
         distance = getDistance(x1, y1, x2, y2)
