@@ -3,10 +3,13 @@ import math
 # adjust the x and y values within the app to correspond the the x and y values
 # on the canvas
 def insideImage(app,x,y):
+    x -= app.panX
+    y -= app.panY
     marginX = (app.width - (app.imageWidth*app.scaleFactor))//2
     marginY = (app.height - (app.imageHeight*app.scaleFactor))//2
     imageX = int((x - marginX)//app.scaleFactor)
     imageY = int((y - marginY)//app.scaleFactor)
+    
     return (imageX,imageY)
 
 # check whether the coordinates are within the canvas

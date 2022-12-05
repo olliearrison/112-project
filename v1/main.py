@@ -89,6 +89,9 @@ def drawMode_appStarted(app, newDrawing):
     app.timerDelay = 50
     app.drag = False
 
+    app.panX = 0
+    app.panY = 0
+
     # define primary image in RGBA (includes opacity 0-255)
     background = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
     (255,255,255,255))
@@ -363,6 +366,14 @@ def drawMode_keyPressed(app, event):
         #getValues(app)
     elif event.key == "d":
         adjustBlack(app, -10)
+    elif event.key == "Up":
+        app.panY += 5
+    elif event.key == "Down":
+        app.panY -= 5
+    elif event.key == "Left":
+        app.panX -= 5
+    elif event.key == "Right":
+        app.panX += 5
 
 # changes the user mode
 # if one button is selected, it will turn all other buttons off
@@ -532,8 +543,8 @@ def drawMode_redrawAll(app, canvas):
     drawBackground(app, canvas)
 
     # display the white background
-    centerX = app.width//2
-    centerY = app.height//2
+    centerX = app.width//2 + app.panX
+    centerY = app.height//2 + app.panY
     
     canvas.create_image(centerX, centerY, image=app.backgroundLayer.zoomReturnLayer(app))
 
