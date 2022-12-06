@@ -1,4 +1,6 @@
 # 112-project
+
+I created ProCreate112, which is a drawing software based on ProCreate. With it, the user has the ability to sketch using the pencil, shade using the airbrush, and erase. Layers and color selection works the same way they might in a digital program. There is everything that one needs to create a simple illustration.
  
 Run program from main.py
 
