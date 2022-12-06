@@ -4,10 +4,13 @@ I created ProCreate112, which is a drawing software based on ProCreate. With it,
  
 Run program from main.py
 
+Libraries used: cmu-112-graphics, numpy, random, and colorsys
+
+Directions to Use:
 Press the plus button to create a new image from the gallery.
 Press the wand icon to go back to the gallery.
 Press the thumbnail image in the gallery to resume working on that image.
-It will save while you are running, but it does not back up locally. 
+It will save while you are running so you can work on multiple drawings at once, but it does not back up locally. 
 
 Use top slider to adjust brush size.
 Use bottom slider to adjust opacity.
