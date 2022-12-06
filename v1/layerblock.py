@@ -28,7 +28,7 @@ class LayerBlock:
         y2 = centerY + maxHeight//2
 
         if (x >= x1 and x <= x2) and (y >= y1 and y <= y2):
-            self.selected = not(self.selected)
+            self.selected = True
             self.resetAllElse(app)
 
             return True

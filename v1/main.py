@@ -17,10 +17,7 @@ Questions:
 - 
 
 Bugs Found:
-- can not be selecting a layer
-- 'NoneType' object is not subscriptable app.colorCoor[1] = loc[0] after trying
-to select a blank bit of canvas
-
+- 
 
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 
@@ -104,7 +101,7 @@ def drawMode_appStarted(app, newDrawing):
 
     pencilImage = Image.open("pencil.png").convert("RGBA")
     app.pencil = brush.Brush(pencilImage, app.currentColor, 10, 255, 80, 
-                None, None, False, (3,10), jitter = True)
+                None, None, False, (3,10), jitter = True, smooth = True)
 
     # holds the most recent x and y position on the canvas
     app.oldX = None
@@ -174,6 +171,7 @@ def drawMode_timerFired(app):
             app.airbrush.addDot(coor[0],coor[1])
         elif app.userMode == "pencil":
             app.pencil.addDot(coor[0],coor[1])
+
     app.toBeDrawn = set()
     app.scalePaintLayer = app.allLayers[app.layerSelectedI].zoomReturnLayer(app)
 
@@ -382,7 +380,6 @@ def changeMode(app, mode):
     for button in app.mainButtons:
         if button.mode == mode:
             button.isActive = True
-            print(button.mode, button.isActive)
         else:
             button.isActive = False
 
@@ -392,14 +389,12 @@ def colorSelectMode(app):
 
 def colorsMode(app):
     if app.userMode == "colors":
-        print("same mode, change to pencil")
         airbrushMode(app)
     else:
         changeMode(app, "colors")
 
 def layersMode(app):
     if app.userMode == "layers":
-        print("same mode, change to pencil")
         airbrushMode(app)
     else:
         changeMode(app, "layers")
@@ -433,14 +428,14 @@ def eraserMode(app):
     elif app.userMode == "pencil":
         app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
 
-    print("eraser mode")
-
 
 def drawMode_mousePressed(app, event):
     if app.userMode == "layers":
         checkLayerBlocks(app, event.x, event.y)
     if (app.userMode == "colors" and inCircle(app, event.x, event.y)[0] != None):
-        getColor(app, event)
+        
+        
+        getColor(app, event.x, event.y)
         
         if app.userMode == "airbrush":
             app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)

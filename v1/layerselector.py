@@ -66,21 +66,6 @@ def inCircle(app, x, y):
     else:
         return (None, None)
 
-def getColor(app, event):
-    x = event.x
-    y = event.y
-    adjustedX, adjustedY = inCircle(app, x, y)
-    if (adjustedX != None):
-        adjustX = adjustedX
-        adjustY = adjustedY
-
-        r,g,b,a = app.colorImageAdjust.getpixel((adjustX, adjustY))
-        app.currentColor = (r,g,b)
-
-def adjustBlack(app, amount):
-    app.blackValue += amount
-    updateImage(app)
-
 # code taken from what I wrote during Hack112
 def drawRoundedBoxBackground(app, canvas,xSize,ySize,xCenter, yCenter):
     r = min(app.height, app.width)/80

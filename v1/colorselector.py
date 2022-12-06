@@ -14,9 +14,6 @@ def loadColorSelect(app):
     app.colortitle = Image.open("layer-assets/colortitle.png").convert("RGBA")
     app.colortitle = app.scaleImage(app.colortitle, 1/6)
 
-    #app.colorSlider = ThinSlider(app, app.width//10*7+20, app.height//2 + 30, .75, 
-    #print("hi"), True, 0)
-
 def getPixelValueXY(app):
     updateImage(app)
     r, g, b, = app.currentColor
@@ -44,10 +41,6 @@ def getPixelValueXY(app):
 
     for item in mergedHue:
         if item in mergedSaturation:
-            #print(item)
-            print(h, np.array(app.colorImageHSV)[item[0]][item[1]][0])
-            print(s, np.array(app.colorImageHSV)[item[0]][item[1]][1])
-            print((item[0],item[1],v))
             return(item[0]-100,item[1]-100,v)
     
 
@@ -64,33 +57,30 @@ def inCircle(app, x, y):
 
     r = 94
     if getDistance(centerX, centerY, x, y) <= r:
-        print("inside")
         adjustedX = x - centerX + r
         adjustedY = y - centerY + r
         app.colorCoor[0] = adjustedX - r
         app.colorCoor[1] = adjustedY - r
-        print(app.colorCoor)
         return (adjustedX, adjustedY)
     else:
         return (None, None)
 
-def getColor(app, event):
-    x = event.x
-    y = event.y
+def getColor(app, x, y):
     adjustedX, adjustedY = inCircle(app, x, y)
     if (adjustedX != None):
-        print(adjustedX, adjustedY)
         adjustX = adjustedX
         adjustY = adjustedY
 
         r,g,b,a = app.colorImageAdjust.getpixel((adjustX, adjustY))
         app.currentColor = (r,g,b)
-        print(app.currentColor)
 
 def adjustBlack(app, amount):
-    print(amount)
     app.blackValue += amount
     updateImage(app)
+    if app.colorCoor != None:
+        print("find color")
+        r,g,b,a = app.colorImageAdjust.getpixel((app.colorCoor[0]+100, app.colorCoor[1]+100))
+        app.currentColor = (r,g,b)
 
 # code taken from what I wrote during Hack112
 def drawRoundedBoxBackground(app, canvas,xSize,ySize,xCenter, yCenter):

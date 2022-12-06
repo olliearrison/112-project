@@ -5,7 +5,8 @@ import random
 class Brush:
     # self.opacity is 0-255
     def __init__(self, brushImage, color, size, opacity, pressureOpacity,
-    resultingBrush, currentStroke, active, sizeRange, jitter = False):
+    resultingBrush, currentStroke, active, sizeRange, jitter = False, 
+    smooth = False):
         self.brushImage = brushImage
         self.color = color
         self.size = size
@@ -13,6 +14,7 @@ class Brush:
         self.pressureOpacity = pressureOpacity
         self.resultingBrush = resultingBrush
         self.currentStroke = currentStroke
+        self.currentStrokeAdjust = None
         self.active = active
         self.sizeRange = sizeRange
         self.jitter = jitter
@@ -117,15 +119,18 @@ class Brush:
         a = a.point(lambda i: (i) * newA)
         return Image.merge('RGBA', (r, g, b, a))
 
+    
     def afterBrushStroke(self, app, layer):
         app.oldX = None
         app.oldY = None
 
         #app.image1 = Image.alpha_composite(app.image1, self.getCurrentStroke())
+
+        
         layer.addBrushStroke(app, self.getCurrentStroke())
+
         self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight),
         (255,255,255,0))
-
         self.active = False
         
 class Testing(Brush):
