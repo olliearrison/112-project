@@ -20,8 +20,8 @@ Bugs Found:
 - 
 
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
-
 """
+
 def appStarted(app):
     app.mode = 'galleryMode'
     adjustImage = getImage("plus", app, scale=2)
@@ -167,7 +167,7 @@ def createLayers(app):
 
 def drawMode_timerFired(app):
     for coor in app.toBeDrawn:
-        if app.userMode == "airbrush":
+        if app.userMode == "airbrush" or app.userMode == "eraser":
             app.airbrush.addDot(coor[0],coor[1])
         elif app.userMode == "pencil":
             app.pencil.addDot(coor[0],coor[1])
@@ -332,6 +332,7 @@ def gallery(app):
     app.currentDrawing.setLayers(app.allLayers)
     app.mode = 'galleryMode'
 
+
 # navigate options with keys
 def drawMode_keyPressed(app, event):
     if event.key == "BackSpace":
@@ -423,7 +424,7 @@ def eraserMode(app):
     changeMode(app, "eraser")
     app.currentColor = app.eraser
 
-    if app.userMode == "airbrush":
+    if app.userMode == "airbrush" or app.userMode == "eraser":
         app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
     elif app.userMode == "pencil":
         app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
@@ -448,7 +449,7 @@ def drawMode_mouseReleased(app, event):
     # reset the x and y mouse values
     index = 0
     if (app.drag):
-        if app.userMode == "airbrush":
+        if app.userMode == "airbrush" or app.userMode == "eraser":
             app.airbrush.afterBrushStroke(app, app.allLayers[app.layerSelectedI])
         elif app.userMode == "pencil":
             app.pencil.afterBrushStroke(app, app.allLayers[app.layerSelectedI])
@@ -493,7 +494,7 @@ def drawMode_mouseReleased(app, event):
                         app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
                 else:
                     imageX, imageY = coors[0], coors[1]
-                    if app.userMode == "airbrush":
+                    if app.userMode == "airbrush" or app.userMode == "eraser":
                         app.airbrush.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
                     elif app.userMode == "pencil":
                         app.pencil.brushClick(imageX ,imageY, app.allLayers[app.layerSelectedI], app)
@@ -525,7 +526,7 @@ def drawMode_mouseDragged(app, event):
         imageX, imageY = insideImage(app,x,y)
         if (coorsWork(app, imageX, imageY)):
             app.drag = True
-            if app.userMode == "airbrush":
+            if app.userMode == "airbrush" or app.userMode == "eraser":
                 app.airbrush.duringBrushStroke(app, imageX, imageY)
             elif app.userMode == "pencil":
                 app.pencil.duringBrushStroke(app, imageX, imageY)
@@ -549,7 +550,7 @@ def drawMode_redrawAll(app, canvas):
         if app.allLayerBlocks[layerI].visible:
             canvas.create_image(centerX, centerY, image= app.allLayers[layerI].zoomReturnLayer(app))
             if layerI == app.layerSelectedI:
-                if app.userMode == "airbrush":
+                if app.userMode == "airbrush" or app.userMode == "eraser":
                     if app.airbrush.active:
                         currentStroke = app.airbrush.getCurrentStroke()
                         currentStroke = app.scaleImage(currentStroke, app.scaleFactor)
