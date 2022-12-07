@@ -14,14 +14,13 @@ class Slider:
 
     # num is 0-255
     def setAmount(self, num):
-        print("num",num)
         bound1 = self.y - self.sizeY + self.slideSize
         bound2 = self.y + self.sizeY - self.slideSize
         den = bound2 - bound1
         adjust = num/255
         self.amount = bound2 - (den*adjust)
-        print(self.amount)
     
+    # get the num out of 255
     def getNum(self):
         return int(self.getPercent() * 255)
 

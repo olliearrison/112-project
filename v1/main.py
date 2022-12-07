@@ -12,13 +12,8 @@ from color import *
 from drawing import *
 from gallerybackground import *
 
-""" 
-Questions:
-- 
-
-Bugs Found:
-- 
-
+"""
+Frequently used resource:
 pillow docs: https://pillow.readthedocs.io/en/stable/reference/Image.html
 """
 
@@ -143,11 +138,11 @@ def drawMode_appStarted(app, newDrawing):
 
     app.layerSelectedI = 0
 
-
+# creates 3 starting layers or retreives the drawing instance the user is
+# opening
 def createLayers(app):
     app.allLayers = []
     app.allScaleLayers = []
-
 
     if len(app.currentDrawing.layers) == 0:
         for i in range(3):
@@ -165,6 +160,7 @@ def createLayers(app):
             scalePaintLayer = layerItem.zoomReturnLayer(app)
             app.allScaleLayers.append(scalePaintLayer)
 
+# draws dots based on the sets which update when the user draws
 def drawMode_timerFired(app):
     for coor in app.toBeDrawn:
         if app.userMode == "airbrush" or app.userMode == "eraser":
@@ -259,21 +255,6 @@ def createButtons(app):
                 selector, forward, backward])
     return result
 
-"""ef toggleColorWindow(app):
-    app.colorWindow = not(app.colorWindow)
-    if app.colorWindow:
-        app.layerWindow = False
-
-# shouldn't be called
-# PROBABLY REMOVE
-def toggleLayerWindow(app):
-    app.layerWindow = not(app.layerWindow)
-    if app.layerWindow:
-        for layerI in range(len(app.allLayers)):
-            app.allLayerBlocks[layerI].updateImage(app.allLayers[layerI], app)
-        app.colorWindow = False
-"""
-
 # saves an image with a white background
 def saveImage(app):
     flatImage = None
@@ -304,12 +285,15 @@ def checkButtons(app, x, y):
             return True
     return False
 
+# check if layer block has been clicked and respond
 def checkLayerBlocks(app, x, y):
     app.addLayer.checkClicked(x,y,app)
     for layerBlockI in range(len(app.allLayerBlocks)):
         if app.allLayerBlocks[layerBlockI].layerBlockImageScaled != None:
+
             if not(app.allLayerBlocks[layerBlockI].visibilityButton != None and
             app.allLayerBlocks[layerBlockI].visibilityButton.checkClicked(x,y,app)):
+
                 if app.allLayerBlocks[layerBlockI].checkClicked(x,y,app):
                     app.allLayerBlocks[layerBlockI].resetAllElse(app)
                     app.layerSelectedI = layerBlockI
@@ -317,8 +301,10 @@ def checkLayerBlocks(app, x, y):
 
 # filler response function
 def response(app):
-    print("response has been called")
+    print("")
 
+# creates a flattened image for the thumbnail
+# stores the drawing
 def gallery(app):
     flatImage = None
     for layer in app.allLayers:
@@ -346,7 +332,6 @@ def drawMode_keyPressed(app, event):
         for layer in app.allLayers:
             layer.calculateLayer(app)
         # scale the results image (but not the actual image)
-        #app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
         app.backgroundLayer.calculateLayer(app)
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
@@ -356,13 +341,11 @@ def drawMode_keyPressed(app, event):
         for layer in app.allLayers:
             layer.calculateLayer(app)
         # scale the results image (but not the actual image)
-        #app.scalePaintLayer = app.paintLayer.zoomReturnLayer(app)
         # scale the results background (but not the actual image)
         app.backgroundLayer.calculateLayer(app)
         app.scaleBackgroundLayer = app.backgroundLayer.zoomReturnLayer(app)
     elif event.key == "a":
         adjustBlack(app, 10)
-        #getValues(app)
     elif event.key == "d":
         adjustBlack(app, -10)
     elif event.key == "Up":
@@ -384,16 +367,18 @@ def changeMode(app, mode):
         else:
             button.isActive = False
 
-# select a color
+# select a color from the canvas
 def colorSelectMode(app):
     changeMode(app, "selector")
 
+# select a color from the window
 def colorsMode(app):
     if app.userMode == "colors":
         airbrushMode(app)
     else:
         changeMode(app, "colors")
 
+# select and adjust layers
 def layersMode(app):
     if app.userMode == "layers":
         airbrushMode(app)
@@ -405,8 +390,6 @@ def layersMode(app):
 # change to penMode
 def pencilMode(app):
     changeMode(app, "pencil")
-    #app.currentColor = app.color
-
     app.opacitySlider.setAmount(app.pencil.opacity)
     app.sizeSlider.setAmount(app.pencil.size)
     app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
@@ -414,7 +397,6 @@ def pencilMode(app):
 # change to penMode
 def airbrushMode(app):
     changeMode(app, "airbrush")
-    #app.currentColor = app.color
     app.opacitySlider.setAmount(app.airbrush.opacity)
     app.sizeSlider.setAmount(app.airbrush.size)
     app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
@@ -422,14 +404,13 @@ def airbrushMode(app):
 # change to eraserMode
 def eraserMode(app):
     changeMode(app, "eraser")
-    app.currentColor = app.eraser
 
     if app.userMode == "airbrush" or app.userMode == "eraser":
         app.airbrush.createResultingBrush(app, app.currentColor, app.airbrush.size)
     elif app.userMode == "pencil":
         app.pencil.createResultingBrush(app, app.currentColor, app.pencil.size)
 
-
+# draw in response to mousePressed
 def drawMode_mousePressed(app, event):
     if app.userMode == "layers":
         checkLayerBlocks(app, event.x, event.y)
@@ -445,7 +426,6 @@ def drawMode_mousePressed(app, event):
 
 # when the mouse is released
 def drawMode_mouseReleased(app, event):
-    
     # reset the x and y mouse values
     index = 0
     if (app.drag):
@@ -531,9 +511,7 @@ def drawMode_mouseDragged(app, event):
             elif app.userMode == "pencil":
                 app.pencil.duringBrushStroke(app, imageX, imageY)
 
-                
-            
-
+# draw the canvas in the drawMode
 def drawMode_redrawAll(app, canvas):
     # draw the background
     drawBackground(app, canvas)

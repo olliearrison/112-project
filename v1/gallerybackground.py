@@ -1,5 +1,5 @@
+# create a grey background
 def drawGalleryBackground(app, canvas):
-    # create a grey background
     canvas.create_rectangle(0,0,app.width, app.height, fill = '#252525')
     drawTopWindow(app, canvas)
 

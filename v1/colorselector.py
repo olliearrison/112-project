@@ -4,6 +4,7 @@ from color import *
 import numpy as np
 import colorsys
 
+# open the color select
 def loadColorSelect(app):
     app.colorImage = Image.open("color.png").convert("RGBA")
     app.colorImageAdjust = Image.open("color.png").convert("RGBA")
@@ -14,6 +15,9 @@ def loadColorSelect(app):
     app.colortitle = Image.open("layer-assets/colortitle.png").convert("RGBA")
     app.colortitle = app.scaleImage(app.colortitle, 1/6)
 
+# convert the current color to h,s,v
+# search in the image for the hue and saturation values within an error of 1
+# return the coordinates of the hue and saturation within the image
 def getPixelValueXY(app):
     updateImage(app)
     r, g, b, = app.currentColor
@@ -43,9 +47,7 @@ def getPixelValueXY(app):
         if item in mergedSaturation:
             return(item[0]-100,item[1]-100,v)
     
-
-    
-
+# check if the user has clicked inside of the circle
 def inCircle(app, x, y):
     x1 = app.width//10*7
     y1 = app.height//15 * 1.5
@@ -53,7 +55,7 @@ def inCircle(app, x, y):
     y2 = app.height//5*3
 
     centerX = (x1 + x2)//2
-    centerY = (y1 + y2)//2 #+ app.height//15 * 1.5
+    centerY = (y1 + y2)//2
 
     r = 94
     if getDistance(centerX, centerY, x, y) <= r:
@@ -65,6 +67,7 @@ def inCircle(app, x, y):
     else:
         return (None, None)
 
+# get the pixel at the location
 def getColor(app, x, y):
     adjustedX, adjustedY = inCircle(app, x, y)
     if (adjustedX != None):
@@ -74,15 +77,17 @@ def getColor(app, x, y):
         r,g,b,a = app.colorImageAdjust.getpixel((adjustX, adjustY))
         app.currentColor = (r,g,b)
 
+# update the image with the black value
+# change the user color
 def adjustBlack(app, amount):
     app.blackValue += amount
     updateImage(app)
     if app.colorCoor != None:
-        print("find color")
         r,g,b,a = app.colorImageAdjust.getpixel((app.colorCoor[0]+100, app.colorCoor[1]+100))
         app.currentColor = (r,g,b)
 
 # code taken from what I wrote during Hack112
+# creates a rounded box
 def drawRoundedBoxBackground(app, canvas,xSize,ySize,xCenter, yCenter):
     r = min(app.height, app.width)/80
 
@@ -120,6 +125,7 @@ def drawRoundedBoxBackground(app, canvas,xSize,ySize,xCenter, yCenter):
     canvas.create_line(w-xDif,h+yDif+r,
     w+xDif,h+yDif+r, fill = fillColor)
 
+# split the image and multiply by constant value
 def updateImage(app):
     r,g,b,a = app.colorImage.split()
 
@@ -133,6 +139,7 @@ def updateImage(app):
     # merges the values to create a final brush stamp
     app.colorImageAdjust = Image.merge('RGBA', (r, g, b, a))
 
+# draw the color selector
 def drawColorSelectBackground(app, canvas):
     x1 = app.width//10*7
     y1 = app.height//15 * 1.5
@@ -153,8 +160,8 @@ def drawColorSelectBackground(app, canvas):
 
     canvas.create_image(centerX//10*9.2, centerY//3*1.2, image= ImageTk.PhotoImage(app.colortitle))
 
-    #app.colorSlider.drawSlider(app, canvas)
-
+# not currently used
+# instead, control the color using the keys a and d
 class ThinSlider:
     # the amount variable should be changed to represent 0-255
     def __init__(self, app, xPosition, yPosition, slideSize, response, isActive, 

@@ -15,6 +15,7 @@ class LayerBlock:
         self.layerBlockImageScaledActive = None
         self.visibilityButton = None
 
+    # check if layer block (except button) has been clicked
     def checkClicked(self, x, y, app):
 
         blockWidth, blockHeight = self.layerBlockImageScaled.size
@@ -34,12 +35,14 @@ class LayerBlock:
             return True
         return False
 
+    # reset all other layer blocks
     def resetAllElse(self, app):
         if (self.selected == True):
             for layerBlock in app.allLayerBlocks:
                 if self != layerBlock:
                     layerBlock.selected = False
 
+    # find the place where the layer block should be put
     def getCoors(self, app):
         self.index = app.allLayers.index(self.layer)
 
@@ -49,6 +52,7 @@ class LayerBlock:
             self.visibilityButton.y = centerY - 4
         return (centerX, centerY)
 
+    # gets the layer block set up
     def init(self, app):
         buttonImage = Image.open("layer-assets/visible.png").convert("RGBA")
         buttonImage = app.scaleImage(buttonImage, 1/20)
@@ -61,11 +65,13 @@ class LayerBlock:
         centerX, centerY = self.getCoors(app)
         self.visibilityButton = Button(app, 10, centerX*1.12, centerY-4, self.response, False,tup, "tool")
         
+    # update visibility button
     def response(self, app):
         self.visible = not(self.visible)
         self.visibilityButton.isActive = self.visible
         return True
 
+    # get the preview image
     def scaleCropLayer(self,app):
         self.layerBlockImageScaled = app.scaleImage(self.layerBlockImage, .57)
         self.layerBlockImageScaledActive = app.scaleImage(self.layerBlockImageActive, .57)
@@ -83,13 +89,15 @@ class LayerBlock:
         
         return image, maxWidth*2.14
 
+    # update the layer image
     def updateImage(self, image, app):
         self.layer.image = image.image
-        #self.scaleCropLayer(app)
 
+    # get image
     def getImage(self, app):
         return self.layer.image
 
+    # draw the block
     def drawLayerBlock(self, app, canvas):
         centerX, centerY = self.getCoors(app)
 

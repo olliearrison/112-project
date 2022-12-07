@@ -1,7 +1,11 @@
 from cmu_112_graphics import *
 
 """
-when image is left, returns thumbnail
+when image is left, returns thumbnail, save each layer
+
+when the images are viewed in the gallery, retreive the thumbnail
+
+when the image is opened, retreive the layers
 """
 
 class Drawing:

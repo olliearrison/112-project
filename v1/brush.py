@@ -19,7 +19,10 @@ class Brush:
         self.sizeRange = sizeRange
         self.jitter = jitter
 
+    # adjust the brush image so it can be directly used as a "stamp"
     def createResultingBrush(self, app, newColor, newSize):
+        if app.userMode == "eraser":
+            newColor = (255,255,255)
         self.size = newSize
         adjustedSize = self.sizeRange[0] + (self.sizeRange[1]-self.sizeRange[0])*self.size/100
         # adjust the brush
@@ -41,17 +44,21 @@ class Brush:
         # merges the values to create a final brush stamp
         self.resultingBrush = Image.merge('RGBA', (r, g, b, a))
 
+    # refresh the currentStroke
+    # set self to active
     def startBrushStroke(self, app):
         self.active = True
         self.currentStroke = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
         (255,255,255,0))
 
+    # if doing a singular click, start brush, add dot, and add to canvas
     def brushClick(self,x ,y, layer, app):
         if not(self.active):
             self.startBrushStroke(app)
             self.addDot(x, y)
             self.afterBrushStroke(app, layer)
 
+    # add dot with jitter if specified
     def addDot(self, x, y):
         resultingBrush = self.resultingBrush
         if self.jitter:
@@ -60,6 +67,8 @@ class Brush:
         adjust = brushWidth //2
         self.currentStroke.alpha_composite(resultingBrush, dest = (x - adjust, y - adjust))
 
+    # if the user has a last coordinate that is a part of the brush stroke
+    # draw a lone, otherwise, do a dot
     def duringBrushStroke(self, app, x, y):
         if not(self.active):
             self.startBrushStroke(app)
@@ -76,12 +85,12 @@ class Brush:
         app.oldX = x
         app.oldY = y
 
+    # add a dot where the brush is
     def drawLine(self, app, x1, y1, x2, y2):
         self.addDot(x2, y2)
         self.efficientMidpoint(app, x1, y1, x2, y2)
 
-    # interpolation from 
-    # https://stackoverflow.com/questions/31543775/how-to-perform-cubic-spline-interpolation-in-python
+    # choose the max distance, divide it, and add each individual dot to the set
     def efficientMidpoint(self, app, x1, y1, x2, y2):
         maxDistance = min(self.size/80,5) + 1
         distance = getDistance(x1, y1, x2, y2)
@@ -110,6 +119,7 @@ class Brush:
         # add a point between the first and half way
         self.recursiveMidpoint(app, x1, y1, newCoorX, newCoorY)
 
+    # get the current user input
     def getCurrentStroke(self):
         r,g,b,a = self.currentStroke.split()
         aChange = self.opacity
@@ -119,13 +129,10 @@ class Brush:
         a = a.point(lambda i: (i) * newA)
         return Image.merge('RGBA', (r, g, b, a))
 
-    
+    # flatten the userinput onto the canvas
     def afterBrushStroke(self, app, layer):
         app.oldX = None
         app.oldY = None
-
-        #app.image1 = Image.alpha_composite(app.image1, self.getCurrentStroke())
-
         
         layer.addBrushStroke(app, self.getCurrentStroke())
 
@@ -133,24 +140,3 @@ class Brush:
         (255,255,255,0))
         self.active = False
         
-class Testing(Brush):
-    def createResultingBrush(self, app, newColor, newSize):
-        self.size = newSize
-        adjustedSize = (self.size/20 + 1)/10
-        # adjust the brush
-        self.resultingBrush = app.scaleImage(self.brushImage, adjustedSize)
-
-        self.color = (30,30,30)
-        newR, newG, newB = self.color[0],self.color[1],self.color[2]#,self.color[3]
-        r,g,b,a = self.resultingBrush.split()
-
-
-        newA = self.pressureOpacity/255
-        # sets each point on the brush to the correct value
-        r = r.point(lambda i: (i + 1) * newR)
-        g = g.point(lambda i: (i + 1) * newG)
-        b = b.point(lambda i: (i + 1) * newB)
-        a = a.point(lambda i: (i) * newA)
-
-        # merges the values to create a final brush stamp
-        self.resultingBrush = Image.merge('RGBA', (r, g, b, a))

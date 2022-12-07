@@ -5,6 +5,7 @@ from layerblock import *
 import button
 from layer import *
 
+# add layer and create an associated layer block
 def addLayer(app):
     if len(app.allLayers) <= 4:
         paintImage = Image.new('RGBA', (app.imageWidth, app.imageHeight), 
@@ -18,8 +19,8 @@ def addLayer(app):
         layerBlock = LayerBlock(app.allLayers[len(app.allLayers)-1], True, False, len(app.allLayers)-1)
         layerBlock.init(app)
         app.allLayerBlocks.append(layerBlock)
-        print("add layer")
 
+# update layer select
 def loadLayerSelect(app):
     image = app.loadImage("layer-assets/plus.png")
     image = app.scaleImage(image, 1/9)
@@ -32,7 +33,6 @@ def loadLayerSelect(app):
     app.allLayerBlocks = []
 
     if len(app.currentDrawing.layerBlocks) == 0:
-        print("creating new layers")
 
         for layerI in range(len(app.allLayers)):
             layerBlock = LayerBlock(app.allLayers[layerI], True, False, layerI)
@@ -43,28 +43,8 @@ def loadLayerSelect(app):
 
     app.allLayerBlocks[0].selected = True
     
-
 def response():
-    print("hi")
-
-def inCircle(app, x, y):
-    x1 = app.width//10*7
-    y1 = app.height//15 * 1.5
-    x2 = app.width//100*98
-    y2 = app.height//5*3
-
-    centerX = (x1 + x2)//2
-    centerY = (y1 + y2)//2
-
-    r = 94
-    if getDistance(centerX, centerY, x, y) <= r:
-        adjustedX = x - centerX + r
-        adjustedY = y - centerY + r
-        app.colorCoor[0] = adjustedX - r
-        app.colorCoor[1] = adjustedY - r
-        return (adjustedX, adjustedY)
-    else:
-        return (None, None)
+    print("")
 
 # code taken from what I wrote during Hack112
 def drawRoundedBoxBackground(app, canvas,xSize,ySize,xCenter, yCenter):
@@ -104,20 +84,7 @@ def drawRoundedBoxBackground(app, canvas,xSize,ySize,xCenter, yCenter):
     canvas.create_line(w-xDif,h+yDif+r,
     w+xDif,h+yDif+r, fill = fillColor)
 
-def updateImage(app):
-    r,g,b,a = app.colorImage.split()
-
-    const = (app.blackValue)/255
-    
-    # sets each point on the brush to the correct value
-    r = r.point(lambda i: min(max(i * const,0),255))
-    g = g.point(lambda i: min(max(i * const,0),255))
-    b = b.point(lambda i: min(max(i * const,0),255))
-
-    # merges the values to create a final brush stamp
-    app.colorImageAdjust = Image.merge('RGBA', (r, g, b, a))
-
-
+# draw background and layer blocks
 def drawLayerSelectBackground(app, canvas):
     x1 = app.width//10*7
     y1 = app.height//15 * 1.5

@@ -38,7 +38,3 @@ class Button:
         else:
             canvas.create_image(self.x + self.size//2, self.y + self.size//2, 
             image=ImageTk.PhotoImage(self.images[0]))
-
-#class SizeButton(Button):
-#    def __init__(self, sizeX, sizeY):
-#
